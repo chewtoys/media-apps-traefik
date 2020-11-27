@@ -116,7 +116,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/traefik:/config
-    image: traefik/traefik:latest
+    image: traefik:latest
 
   # redis - session database (more performance)
   # default run PUID is 1001 and PGID is root(0)
