@@ -253,7 +253,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
       - ${DOCKER_DIR}/plex-transcode:/transcode
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/hotio/plex:autoscan
 
   # plex - media server
@@ -278,7 +278,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex-4k:/config
       - ${DOCKER_DIR}/plex-4k-transcode:/transcode
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/hotio/plex:autoscan
 
   # tautulli - plex monitor
@@ -506,7 +506,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr:/config
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/hotio/bazarr:nightly
 
   # bazarr - automatic download subtitles
@@ -527,7 +527,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr-4k:/config
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/hotio/bazarr:nightly
 
   # sonarr - TV Shows
@@ -551,7 +551,7 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER_DIR}/sonarr:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
     image: ghcr.io/hotio/sonarr:nightly
 
@@ -577,7 +577,7 @@ services:
     volumes:
       - ${DOCKER_DIR}/sonarr-4k:/config
       - downloads:/data/downloads
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/hotio/sonarr:nightly
 
   # radarr - Movies
@@ -601,7 +601,7 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER_DIR}/radarr:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
     image: ghcr.io/hotio/radarr:nightly
 
@@ -626,7 +626,7 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER_DIR}/radarr-4k:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
     image: ghcr.io/hotio/radarr:nightly
 
@@ -650,11 +650,8 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER_DIR}/lidarr:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
-      # this is temporary as there was a path restructuring and some errors came up
-      # using a docker volume (below) to map an old root directory
-      - music:/Music
     image: ghcr.io/hotio/lidarr:nightly
 
   # readarr - eBooks
@@ -679,11 +676,8 @@ services:
       - calibre
     volumes:
       - ${DOCKER_DIR}/readarr:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
-      # this is temporary as there was a path restructuring and some errors came up
-      # using a docker volume (below) to map an old root directory
-      - books:/Books
     image: ghcr.io/hotio/readarr:nightly
 
   # mylar3 - Comics
@@ -705,11 +699,8 @@ services:
       - nzbget
     volumes:
       - ${DOCKER_DIR}/mylar3:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
-      - mylarTempDownloads:/downloads
-      # this is temporary as there was a path restructuring and some errors came up
-      # using a docker volume (below) to map an old root directory
     image: ghcr.io/hotio/mylar3:nightly
 
   # lazylib - eBooks and Audiobooks
@@ -735,7 +726,7 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER_DIR}/lazylib:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
     image: ghcr.io/linuxserver/lazylibrarian:latest
 
@@ -774,7 +765,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/calibre:/config
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/linuxserver/calibre:latest
 
   # calibre-web - web frontend for calibre
@@ -794,7 +785,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/calibre-web:/config
-      - nfsData:/data
+      - data:/data
     image: ghcr.io/linuxserver/calibre-web:latest
 
   # organizr - WebApp portal for bookmarks, prevents multiple tabs
@@ -902,7 +893,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
-      - nfsData:/data
+      - data:/data
       - downloads:/data/downloads
     image: ghcr.io/hotio/unpackerr:nightly
 
@@ -935,17 +926,12 @@ volumes:
       type: none
       device: ${LOCAL_DL_DIR}
 
-  # NFS Mounts
-  nfsData:
+  data:
+    driver: local
     driver_opts:
-      type: nfs
-      o: addr=${NAS_IP},rsize=65536,wsize=65536,tcp,noatime,nolock,soft,rw
-      device: :/volume1/data
-
-  # Temp Volumes
-  books:
-  music:
-  mylarTempDownloads:
+      o: bind
+      type: none
+      device: ${DATA_DIR}
 
 secrets:
   acme_email:
