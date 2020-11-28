@@ -157,13 +157,13 @@ services:
       - traefik.enable=true
       ## HTTP Routers
       - traefik.http.routers.authelia-rtr.entrypoints=https
-      - traefik.http.routers.authelia-rtr.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/authelia`)
+      - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`)
       - traefik.http.routers.authelia-rtr.tls.certresolver=letsencrypt
-      ## Middlewares
-      - traefik.http.routers.authelia-rtr.middlewares=chain-authelia@file
       ## HTTP Services
       - traefik.http.services.authelia-svc.loadbalancer.server.port=9091
       - traefik.http.routers.authelia-rtr.service=authelia-svc
+      ## Middlewares
+      - traefik.http.routers.authelia-rtr.middlewares=chain-authelia@file
     secrets:
       - jwt
       - session
