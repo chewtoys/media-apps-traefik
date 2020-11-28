@@ -15,14 +15,17 @@ server:
     # Write buffer size configures the http server's maximum outgoing response size in bytes.
     write_buffer_size: 4096
     # Set the single level path Authelia listens on, must be alphanumeric chars and should not contain any slashes.
-    path: 'authelia'
+    # path: 'authelia'
 
+
+log_level: info
+log_file_path: /config/authelia.log
 # This secret can also be set using the env variables AUTHELIA_JWT_SECRET_FILE
 # I used this site to generate the secret: https://www.grc.com/passwords.htm
 # jwt_secret: SECRET_GOES_HERE # use docker secret file instead AUTHELIA_JWT_SECRET_FILE
 
 # https://docs.authelia.com/configuration/miscellaneous.html#default-redirection-url
-default_redirection_url: https://authelia.YOUR_DOMAIN
+default_redirection_url: https://authelia.YOURDOMAIN.COM/
 
 totp:
     issuer: authelia.com
@@ -60,9 +63,11 @@ access_control:
         #      - "^/api/.*$"
         #    - domain: "*.example.com"
         #      policy: one_factor
-        - domain: '*.YOUR_DOMAIN'
+        - domain: 'authelia.YOURDOMAIN.COM'
+          policy: bypass
+        - domain: '*.YOURDOMAIN.COM'
           policy: two_factor
-        - domain: 'YOUR_DOMAIN'
+        - domain: 'YOURDOMAIN.COM'
           policy: two_factor
 
 session:
@@ -74,16 +79,13 @@ session:
     expiration: 1h
     # The inactivity time in seconds before the session is reset.
     inactivity: 5m
-
     # The remember me duration.
     # Value of 0 disables remember me.
     # Value is in seconds, or duration notation. See: https://docs.authelia.com/configuration/index.html#duration-notation-format
     # Longer periods are considered less secure because a stolen cookie will last longer giving attackers more time to spy
     # or attack. Currently the default is 1M or 1 month.
     remember_me_duration: 1w
-
-    domain: YOUR_DOMAIN # Should match whatever your root protected domain is
-
+    domain: YOURDOMAIN.COM # Should match whatever your root protected domain is
     # Optional. Can improve performance on a busy system. If not enabled, session info is stored in memory.
     redis:
         host: authredis
