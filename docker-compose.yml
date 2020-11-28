@@ -159,6 +159,7 @@ services:
     image: ghcr.io/linuxserver/mariadb:latest
 
   # Authelia - Self-Hosted Single Sign-On and Two-Factor Authentication
+  # Docs: https://www.authelia.com/docs/
   authelia:
     container_name: authelia
     hostname: authelia
