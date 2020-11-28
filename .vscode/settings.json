@@ -6,6 +6,7 @@
   },
   "cSpell.ignoreWords": [
     "ghcr",
+    "jsonprpc",
     "key",
     "license",
     "maxinddb",
@@ -21,6 +22,7 @@
     "soft",
     "sysctls",
     "tcp",
+    "torznab",
     "webui",
     "webui port",
     "wsize"
