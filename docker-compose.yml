@@ -39,7 +39,8 @@ services:
       # - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22
       - --entryPoints.traefik.address=:8080
       - --api=true
-      - --api.insecure=true
+      # uncomment below to access dashboard at localhost:8080/dashboard/ for testing only
+      # - --api.insecure=true
       - --serversTransport.insecureSkipVerify=true
       - --log=true
       - --log.level=DEBUG # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
@@ -67,22 +68,33 @@ services:
       - --certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53
     labels:
       - traefik.enable=true
+      # ------------------------------------------------------------------------
       # HTTP-to-HTTPS Redirect
+      # (comment out next 4 lines if you don't want http to https redirection)
       - traefik.http.routers.http-catchall.entrypoints=http
       - traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.http-catchall.middlewares=redirect-to-https
+      # ------------------------------------------------------------------------
       # HTTP Routers
-      - traefik.http.routers.traefik-rtr.entrypoints=https
-      - traefik.http.routers.traefik-rtr.rule=Host(`traefik.${DOMAIN_NAME}`)
+      # - traefik.http.routers.traefik-rtr.entrypoints=http
+      # if not using SSL certs, comment 3 below lines and uncomment above
       - traefik.http.routers.traefik-rtr.tls=true
+      - traefik.http.routers.traefik-rtr.entrypoints=https
       - traefik.http.routers.traefik-rtr.tls.certresolver=letsencrypt
+      # ------------------------------------------------------------------------
+      - traefik.http.routers.traefik-rtr.rule=Host(`traefik.${DOMAIN_NAME}`)
       - traefik.http.routers.traefik-rtr.tls.domains[0].main=${DOMAIN_NAME}
       - traefik.http.routers.traefik-rtr.tls.domains[0].sans=*.${DOMAIN_NAME}
-      ## Services - API
+      # ------------------------------------------------------------------------
+      # Services - API
       - traefik.http.routers.traefik-rtr.service=api@internal
-      ## Middlewares
+      # ------------------------------------------------------------------------
+      # Middlewares
       - traefik.http.routers.traefik-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.traefik-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -155,15 +167,24 @@ services:
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap
     labels:
       - traefik.enable=true
-      ## HTTP Routers
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.authelia-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.authelia-rtr.entrypoints=https
-      - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`)
       - traefik.http.routers.authelia-rtr.tls.certresolver=letsencrypt
-      ## HTTP Services
+      # ------------------------------------------------------------------------
+      - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`)
+      # ------------------------------------------------------------------------
+      # HTTP Services
       - traefik.http.services.authelia-svc.loadbalancer.server.port=9091
       - traefik.http.routers.authelia-rtr.service=authelia-svc
-      ## Middlewares
+      # ------------------------------------------------------------------------
+      # Middlewares
       - traefik.http.routers.authelia-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.authelia-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
     secrets:
       - jwt
       - session
@@ -199,15 +220,23 @@ services:
       - ${DOCKER_DIR}/portainer:/data
     labels:
       - traefik.enable=true
-      ## HTTP Routers
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.portainer-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.portainer-rtr.entrypoints=https
-      - traefik.http.routers.portainer-rtr.rule=Host(`portainer.${DOMAIN_NAME}`)
       - traefik.http.routers.portainer-rtr.tls.certresolver=letsencrypt
-      ## HTTP Services
+      - traefik.http.routers.portainer-rtr.rule=Host(`portainer.${DOMAIN_NAME}`)
+      # ------------------------------------------------------------------------
+      # HTTP Services
       - traefik.http.services.portainer-svc.loadbalancer.server.port=9000
       - traefik.http.routers.portainer-rtr.service=portainer-svc
-      ## Middlewares
+      # ------------------------------------------------------------------------
+      # Middlewares
       - traefik.http.routers.portainer-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.portainer-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
     image: portainer/portainer-ce:latest
 
 networks:
