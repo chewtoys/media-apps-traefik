@@ -58,66 +58,127 @@ access_control:
     # ----------------------------------------------------------------------
     # Policies below bypass oauth as for api calls
     # ----------------------------------------------------------------------
+    # BAZARR
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'bazarr.YOURDOMAIN.COM'
+        - 'bazarr-4k.YOURDOMAIN.COM'
+      resources:
+        - '^(/bazarr(-4k)?)?/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # JACKETT
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'jackett.YOURDOMAIN.COM'
+      resources:
+        - '^(/jackett)?/(api|dl)/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # NZBHYDRA2
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'nzbhydra.YOURDOMAIN.COM'
+        - 'nzbhydra2.YOURDOMAIN.COM'
+      resources:
+        - '^(/nzbhydra(2)?)?/(api|getnzb|gettorrent|rss|torznab).*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
     # LIDARR
     # ----------------------------------------------------------------------
-    - domain: 'YOURDOMAIN.COM'
-      resources:
-        - '^/(lidarr)?/api/.*$'
-      policy: bypass
     - domain:
-        - lidarr.YOURDOMAIN.COM
+        - 'YOURDOMAIN.COM'
+        - 'lidarr.YOURDOMAIN.COM'
       resources:
-        - '^/(lidarr)?/api/.*$'
+        - '^(/lidarr)?/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # OMBI
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'ombi.YOURDOMAIN.COM'
+        - 'ombi-4k.YOURDOMAIN.COM'
+      resources:
+        - '^(/ombi(-4k))?/(api|swagger)/.*$'
       policy: bypass
     # ----------------------------------------------------------------------
     # READARR
     # ----------------------------------------------------------------------
-    - domain: 'YOURDOMAIN.COM'
-      resources:
-        - '^/(readarr)?/api/.*$'
-      policy: bypass
     - domain:
-        - readarr.YOURDOMAIN.COM
+        - 'YOURDOMAIN.COM'
+        - 'readarr.YOURDOMAIN.COM'
       resources:
-        - '^/(readarr)?/api/.*$'
+        - '^(/readarr)?/api/.*$'
       policy: bypass
     # ----------------------------------------------------------------------
     # RADARR
     # ----------------------------------------------------------------------
-    - domain: 'YOURDOMAIN.COM'
-      resources:
-        - '^/(radarr|radarr-4k)?/api/.*$'
-      policy: bypass
     - domain:
-        - radarr.YOURDOMAIN.COM
-        - radarr-4k.YOURDOMAIN.COM
+        - 'YOURDOMAIN.COM'
+        - 'radarr.YOURDOMAIN.COM'
+        - 'radarr-4k.YOURDOMAIN.COM'
       resources:
-        - '^/(radarr|radarr-4k)?/api/.*$'
+        - '^(/radarr(-4k)?)?/api/.*$'
       policy: bypass
     # ----------------------------------------------------------------------
     # SONARR
     # ----------------------------------------------------------------------
-    - domain: 'YOURDOMAIN.COM'
-      resources:
-        - '^/(sonarr|sonarr-4k)?/api/.*$'
-      policy: bypass
     - domain:
+        - 'YOURDOMAIN.COM'
         - 'sonarr.YOURDOMAIN.COM'
         - 'sonarr-4k.YOURDOMAIN.COM'
       resources:
-        - '^/(sonarr|sonarr-4k)?/api/.*$'
+        - '^(/sonarr(-4k)?)?/api/.*$'
       policy: bypass
     # ----------------------------------------------------------------------
-    # READARR
+    # SABNZBD
     # ----------------------------------------------------------------------
-    - domain: 'YOURDOMAIN.COM'
-      resources:
-        - '^/sabnzbd/api/.*$'
-      policy: bypass
     - domain:
-        - sabnzbd.YOURDOMAIN.COM
+        - 'YOURDOMAIN.COM'
+        - 'sabnzbd.YOURDOMAIN.COM'
       resources:
         - '^/sabnzbd/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # NZBGET
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'nzbget.YOURDOMAIN.COM'
+      resources:
+        - '^(/nzbget)?(/[^\/:]*:[^\/]*)?/(jsonrpc|jsonprpc|xmlrpc).*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # PORTAINER
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'portainer.YOURDOMAIN.COM'
+      resources:
+        - '^(/portainer)?/api/websocket.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # QBITTORRENT
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'qbittorrent.YOURDOMAIN.COM'
+      resources:
+        - '^(/qbittorrent)?/api.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # TAUTULLI
+    # ----------------------------------------------------------------------
+    - domain:
+        - 'YOURDOMAIN.COM'
+        - 'tautulli.YOURDOMAIN.COM'
+        - 'tautulli-4k.YOURDOMAIN.COM'
+      resources:
+        - '^(/tautulli(-4k)?)?/api.*$'
       policy: bypass
     # ----------------------------------------------------------------------
     # end bypass policies
@@ -170,12 +231,12 @@ storage:
 
 notifier:
   smtp:
-  username: YOUR_SMTP_USER
-  # This secret can also be set using the env variables AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
-  # password: # use docker secret file instead AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
-  host: SMTP_SERVER
-  port: 587
-  sender: YOUR_SENDER_ADDRESS
+    username: YOUR_EMAIL_SERVER_USER
+    # This secret can also be set using the env variables AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
+    # password: # use docker secret file instead AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
+    host: SMTP_SERVER
+    port: SMTP_SERVER_PORT
+    sender: YOUR_FROM_EMAIL_ADDRESS
 # For testing purpose, notifications can be sent in a file. Be sure map the volume in docker-compose.
 # filesystem:
-#    filename: /tmp/authelia/notification.txt
+  # filename: /tmp/authelia/notification.txt
