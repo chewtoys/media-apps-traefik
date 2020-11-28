@@ -25,10 +25,8 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_HOSTED_ZONE_ID=${AWS_HOSTED_ZONE_ID}
-      - AWS_TTL=${AWS_TTL}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
     command: # CLI arguments
       - --global.checkNewVersion=true
       - --global.sendAnonymousUsage=true
@@ -36,8 +34,7 @@ services:
       - --entryPoints.https.address=:443
       # ------------------------------------------------------------------------
       # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
-      # If you use CloudFlare, this setup is using route53
-      # - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22
+      - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22
       # ------------------------------------------------------------------------
       - --entryPoints.traefik.address=:8080
       - --api=true
@@ -48,7 +45,7 @@ services:
       - --serversTransport.insecureSkipVerify=true
       - --log=true
       # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-      - --log.level=ERROR
+      - --log.level=INFO
       - --accessLog=true
       - --accessLog.filePath=/config/traefik.log
       # Configuring a buffer of 100 lines
@@ -58,7 +55,7 @@ services:
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.${DOMAIN_NAME}`)
       - --providers.docker.exposedByDefault=false
-      - --providers.docker.network=apps
+      - --providers.docker.network=media-apps-compose_apps
       - --providers.docker.swarmMode=false
       # Load dynamic configuration from one or more .toml or .yml files in a directory.
       - --providers.file.directory=/config/rules
@@ -74,10 +71,10 @@ services:
       - --certificatesResolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesResolvers.letsencrypt.acme.storage=/config/acme.json
       - --certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=${DNS_PLUGIN}
-
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
       # ------------------------------------------------------------------------
       # must use manual resolvers when using docker-compose otherwise validation fails
-      - --certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      - --certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
       # ------------------------------------------------------------------------
     labels:
       - traefik.enable=true
@@ -539,112 +536,112 @@ services:
   # Docs: https://github.com/binhex/arch-qbittorrentvpn
   # Read the documentaton on proper setup of either wireguard or openvpn
   # This template is setup for wireguard
-  qbittorrent:
-    container_name: qbittorrent
-    hostname: qbittorrent
-    restart: unless-stopped
-    privileged: true
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      # change below subnet to whatever you configure your docker network to
-      - LAN_NETWORK=172.22.0.0/24
-      - WEBUI_PORT=8080
-      - VPN_ENABLED=yes
-      - VPN_PROV=${VPN_PROV}
-      # options below are openvpn or wireguard (I like wireguard)
-      - VPN_CLIENT=wireguard
-      - STRICT_PORT_FORWARD=yes
-      - ENABLE_PRIVOXY=no
-      - DEBUG=no
-      - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
-      - VPN_USER=${PIA_USERNAME}
-      - VPN_PASS=${PIA_PASSWORD}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/qbittorrent:/config
-      - downloads:/data/downloads
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.qbittorrent-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.qbittorrent-rtr.entrypoints=https
-      - traefik.http.routers.qbittorrent-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.qbittorrent-rtr.rule=Host(`qbittorrent.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=6789
-      - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: binhex/arch-qbittorrentvpn:latest
+  # qbittorrent:
+  #   container_name: qbittorrent
+  #   hostname: qbittorrent
+  #   restart: unless-stopped
+  #   privileged: true
+  #   sysctls:
+  #     - net.ipv4.conf.all.src_valid_mark=1
+  #   networks:
+  #     apps: {}
+  #   environment:
+  #     - TZ=${TZ}
+  #     - UMASK=022
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     # change below subnet to whatever you configure your docker network to
+  #     - LAN_NETWORK=172.22.0.0/24
+  #     - WEBUI_PORT=8080
+  #     - VPN_ENABLED=yes
+  #     - VPN_PROV=${VPN_PROV}
+  #     # options below are openvpn or wireguard (I like wireguard)
+  #     - VPN_CLIENT=wireguard
+  #     - STRICT_PORT_FORWARD=yes
+  #     - ENABLE_PRIVOXY=no
+  #     - DEBUG=no
+  #     - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
+  #     - VPN_USER=${PIA_USERNAME}
+  #     - VPN_PASS=${PIA_PASSWORD}
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - ${DOCKER_DIR}/qbittorrent:/config
+  #     - downloads:/data/downloads
+  #   labels:
+  #     - traefik.enable=true
+  #     # ------------------------------------------------------------------------
+  #     # HTTP Routers
+  #     # - traefik.http.routers.qbittorrent-rtr.entrypoints=http
+  #     # if not using SSL certs, comment the 2 below lines and uncomment above
+  #     - traefik.http.routers.qbittorrent-rtr.entrypoints=https
+  #     - traefik.http.routers.qbittorrent-rtr.tls.certresolver=letsencrypt
+  #     - traefik.http.routers.qbittorrent-rtr.rule=Host(`qbittorrent.${DOMAIN_NAME}`)
+  #     # ------------------------------------------------------------------------
+  #     # HTTP Services
+  #     - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=6789
+  #     - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
+  #     # ------------------------------------------------------------------------
+  #     # Middlewares
+  #     - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
+  #     # uncomment below and comment above if you don't wish to use oauth and mfa
+  #     # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-no-auth@file
+  #     # ------------------------------------------------------------------------
+  #   image: binhex/arch-qbittorrentvpn:latest
 
   # deluge - torrent download client with VPN built in
   # Docs: https://github.com/binhex/arch-delugevpn
   # Read the documentaton on proper setup of either wireguard or openvpn
   # This template is setup for wireguard
-  deluge:
-    container_name: deluge
-    hostname: deluge
-    restart: unless-stopped
-    privileged: true
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      # change below subnet to whatever you configure your docker network to
-      - LAN_NETWORK=172.22.0.0/24
-      - VPN_ENABLED=yes
-      - VPN_PROV=${VPN_PROV}
-      # options below are openvpn or wireguard (I like wireguard)
-      - VPN_CLIENT=wireguard
-      - STRICT_PORT_FORWARD=yes
-      - ENABLE_PRIVOXY=no
-      - DEBUG=no
-      - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
-      - VPN_USER=${PIA_USERNAME}
-      - VPN_PASS=${PIA_PASSWORD}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/deluge:/config
-      - downloads:/data/downloads
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.deluge-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.deluge-rtr.entrypoints=https
-      - traefik.http.routers.deluge-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.deluge-rtr.rule=Host(`deluge.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.deluge-svc.loadbalancer.server.port=8112
-      - traefik.http.routers.deluge-rtr.service=deluge-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.deluge-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.deluge-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: binhex/arch-delugevpn:latest
+  # deluge:
+  #   container_name: deluge
+  #   hostname: deluge
+  #   restart: unless-stopped
+  #   privileged: true
+  #   sysctls:
+  #     - net.ipv4.conf.all.src_valid_mark=1
+  #   networks:
+  #     apps: {}
+  #   environment:
+  #     - TZ=${TZ}
+  #     - UMASK=022
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     # change below subnet to whatever you configure your docker network to
+  #     - LAN_NETWORK=172.22.0.0/24
+  #     - VPN_ENABLED=yes
+  #     - VPN_PROV=${VPN_PROV}
+  #     # options below are openvpn or wireguard (I like wireguard)
+  #     - VPN_CLIENT=wireguard
+  #     - STRICT_PORT_FORWARD=yes
+  #     - ENABLE_PRIVOXY=no
+  #     - DEBUG=no
+  #     - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
+  #     - VPN_USER=${PIA_USERNAME}
+  #     - VPN_PASS=${PIA_PASSWORD}
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - ${DOCKER_DIR}/deluge:/config
+  #     - downloads:/data/downloads
+  #   labels:
+  #     - traefik.enable=true
+  #     # ------------------------------------------------------------------------
+  #     # HTTP Routers
+  #     # - traefik.http.routers.deluge-rtr.entrypoints=http
+  #     # if not using SSL certs, comment the 2 below lines and uncomment above
+  #     - traefik.http.routers.deluge-rtr.entrypoints=https
+  #     - traefik.http.routers.deluge-rtr.tls.certresolver=letsencrypt
+  #     - traefik.http.routers.deluge-rtr.rule=Host(`deluge.${DOMAIN_NAME}`)
+  #     # ------------------------------------------------------------------------
+  #     # HTTP Services
+  #     - traefik.http.services.deluge-svc.loadbalancer.server.port=8112
+  #     - traefik.http.routers.deluge-rtr.service=deluge-svc
+  #     # ------------------------------------------------------------------------
+  #     # Middlewares
+  #     - traefik.http.routers.deluge-rtr.middlewares=chain-authelia@file
+  #     # uncomment below and comment above if you don't wish to use oauth and mfa
+  #     # - traefik.http.routers.deluge-rtr.middlewares=chain-no-auth@file
+  #     # ------------------------------------------------------------------------
+  #   image: binhex/arch-delugevpn:latest
 
   # jackett - nzb torsnab proxy
   # used to aggregate torrent indexers to use with nzbhydra, sonarr and others
