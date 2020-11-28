@@ -239,6 +239,345 @@ services:
       # ------------------------------------------------------------------------
     image: portainer/portainer-ce:latest
 
+  #-----------------------------------------------------------------------------
+  # MEDIA
+  #-----------------------------------------------------------------------------
+
+  # plex - media server
+  # Docs: https://hotio.dev/containers/plex/
+  plex:
+    container_name: plex
+    hostname: plex
+    restart: unless-stopped
+    networks:
+      apps: {}
+    ports:
+      - 32400:32400/tcp
+    environment:
+      - TZ=${TZ}
+      - PLEX_UID=${PUID}
+      - PLEX_GID=${PGID}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/plex:/config
+      - ${DOCKER_DIR}/plex-transcode:/transcode
+      - data:/data
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.plex-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.plex-rtr.entrypoints=https
+      - traefik.http.routers.plex-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.plex-rtr.rule=Host(`plex.${DOMAIN_NAME}`)
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.plex-svc.loadbalancer.server.port=32400
+      - traefik.http.routers.plex-rtr.service=plex-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.plex-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.plex-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/plex:autoscan
+
+  # plex - media server
+  # Docs: https://hotio.dev/containers/plex/
+  plex-4k:
+    container_name: plex-4k
+    hostname: plex-4k
+    restart: unless-stopped
+    networks:
+      apps: {}
+    ports:
+      - 32401:32400/tcp
+    environment:
+      - TZ=${TZ}
+      - PLEX_UID=${PUID}
+      - PLEX_GID=${PGID}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - PLEX_CLAIM=${PLEX_4K_CLAIM}
+      - ADVERTISE_IP=${PLEX_4K_ADVERTISE_IP}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/plex-4k:/config
+      - ${DOCKER_DIR}/plex-4k-transcode:/transcode
+      - data:/data
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.plex-4k-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.plex-4k-rtr.entrypoints=https
+      - traefik.http.routers.plex-4k-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.plex-4k-rtr.rule=Host(`plex-4k.${DOMAIN_NAME}`)
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.plex-4k-svc.loadbalancer.server.port=32400
+      - traefik.http.routers.plex-4k-rtr.service=plex-4k-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.plex-4k-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.plex-4k-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/plex:autoscan
+
+  # tautulli - plex monitor
+  # Docs: https://hotio.dev/containers/tautulli/
+  tautulli:
+    container_name: tautulli
+    hostname: tautulli
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=022
+    links:
+      - plex
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/tautulli:/config
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.tautulli-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.tautulli-rtr.entrypoints=https
+      - traefik.http.routers.tautulli-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.tautulli-rtr.rule=Host(`tautulli.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.tautulli-svc.loadbalancer.server.port=8181
+      - traefik.http.routers.tautulli-rtr.service=tautulli-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.tautulli-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.tautulli-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/tautulli:latest
+
+  # tautulli - plex monitor
+  # Docs: https://hotio.dev/containers/tautulli/
+  tautulli-4k:
+    container_name: tautulli-4k
+    hostname: tautulli-4k
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=022
+    links:
+      - plex-4k
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/tautulli-4k:/config
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.tautulli-4k-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.tautulli-4k-rtr.entrypoints=https
+      - traefik.http.routers.tautulli-4k-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.tautulli-4k-rtr.rule=Host(`tautulli-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli-4k`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.tautulli-4k-svc.loadbalancer.server.port=8181
+      - traefik.http.routers.tautulli-4k-rtr.service=tautulli-4k-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.tautulli-4k-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.tautulli-4k-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/tautulli:latest
+
+  # kitana - plex plugin middleware (frontend)
+  # Docs: https://github.com/pannal/Kitana
+  kitana:
+    container_name: kitana
+    hostname: kitana
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    command: -B 0.0.0.0:31337 -p /kitana -P
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/kitana:/app/data
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.tautulli-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.kitana-rtr.entrypoints=https
+      - traefik.http.routers.kitana-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.kitana-rtr.rule=(Host(`kitana.${DOMAIN_NAME}`) && PathPrefix(`/kitana`)) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/kitana`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.kitana-svc.loadbalancer.server.port=31337
+      - traefik.http.routers.kitana-rtr.service=kitana-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.kitana-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.kitana-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: pannal/kitana:latest
+
+  # sabnzbd - usenet downloader written in python (easynews)
+  # Docs: https://hotio.dev/containers/sabnzbd/
+  sabnzbd:
+    container_name: sabnzbd
+    hostname: sabnzbd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/sabnzbd:/config
+      - downloads:/data/downloads
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.sabnzbd-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.sabnzbd-rtr.entrypoints=https
+      - traefik.http.routers.sabnzbd-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
+      - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.sabnzbd-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.sabnzbd-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/sabnzbd:latest
+
+  # nzbget - usenet downloader written in C++ (easynews)
+  # Docs: https://hotio.dev/containers/nzbget/
+  nzbget:
+    container_name: nzbget
+    hostname: nzbget
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/nzbget:/config
+      - downloads:/data/downloads
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.nzbget-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.nzbget-rtr.entrypoints=https
+      - traefik.http.routers.nzbget-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.nzbget-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.nzbget-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/nzbget:latest
+
+  # qbittorrent - torrent download client with VPN built in
+  # Docs: https://github.com/binhex/arch-qbittorrentvpn
+  # Read the documentaton on proper setup of either wireguard or openvpn
+  # This template is setup for wireguard
+  qbittorrent:
+    container_name: qbittorrent
+    hostname: qbittorrent
+    restart: unless-stopped
+    privileged: true
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      # change below subnet to whatever you configure your docker network to
+      - LAN_NETWORK=172.20.0.0/16
+      - WEBUI_PORT=8080
+      - VPN_ENABLED=yes
+      - VPN_PROV=${VPN_PROV}
+      # options below are openvpn or wireguard (I like wireguard)
+      - VPN_CLIENT=wireguard
+      - STRICT_PORT_FORWARD=yes
+      - ENABLE_PRIVOXY=no
+      - DEBUG=no
+      - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
+      - VPN_USER=${PIA_USERNAME}
+      - VPN_PASS=${PIA_PASSWORD}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/qbittorrent:/config
+      - downloads:/data/downloads
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.qbittorrent-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.qbittorrent-rtr.entrypoints=https
+      - traefik.http.routers.qbittorrent-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.qbittorrent-rtr.rule=Host(`qbittorrent.${DOMAIN_NAME}`)
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: binhex/arch-qbittorrentvpn:latest
+
 networks:
   apps:
     driver: bridge
