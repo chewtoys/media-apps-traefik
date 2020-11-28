@@ -1,4 +1,9 @@
-{
+{"workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#a502a5",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#834083",
+    "titleBar.inactiveForeground": "#ffffff"
+  },
   "cSpell.ignoreWords": [
     "ghcr",
     "key",
