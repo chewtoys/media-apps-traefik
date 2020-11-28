@@ -34,38 +34,51 @@ services:
       - --global.sendAnonymousUsage=true
       - --entryPoints.http.address=:80
       - --entryPoints.https.address=:443
-        # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
-        # If you use CloudFlare, this setup is using route53
+      # ------------------------------------------------------------------------
+      # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
+      # If you use CloudFlare, this setup is using route53
       # - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22
+      # ------------------------------------------------------------------------
       - --entryPoints.traefik.address=:8080
       - --api=true
+      # ------------------------------------------------------------------------
       # uncomment below to access dashboard at localhost:8080/dashboard/ for testing only
       # - --api.insecure=true
+      # ------------------------------------------------------------------------
       - --serversTransport.insecureSkipVerify=true
       - --log=true
-      - --log.level=ERROR # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+      # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+      - --log.level=ERROR
       - --accessLog=true
       - --accessLog.filePath=/config/traefik.log
-      - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
+      # Configuring a buffer of 100 lines
+      - --accessLog.bufferingSize=100
       - --accessLog.filters.statusCodes=400-499
       - --providers.docker=true
       - --providers.docker.endpoint=unix:///var/run/docker.sock
-      # - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.${DOMAIN_NAME}`)
+      - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.${DOMAIN_NAME}`)
       - --providers.docker.exposedByDefault=false
       - --providers.docker.network=apps
       - --providers.docker.swarmMode=false
       # Load dynamic configuration from one or more .toml or .yml files in a directory.
       - --providers.file.directory=/config/rules
+      # ------------------------------------------------------------------------
       # Load dynamic configuration from a file.
       #      - --providers.file.filename=/path/to/file
       # Only works on top level files in the rules folder
       - --providers.file.watch=true
+      # ------------------------------------------------------------------------
       # LetsEncrypt Staging Server - uncomment when testing
       # - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      # ------------------------------------------------------------------------
       - --certificatesResolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesResolvers.letsencrypt.acme.storage=/config/acme.json
       - --certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=${DNS_PLUGIN}
+
+      # ------------------------------------------------------------------------
+      # must use manual resolvers when using docker-compose otherwise validation fails
       - --certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      # ------------------------------------------------------------------------
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
