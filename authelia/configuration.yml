@@ -8,14 +8,14 @@ log_level: warn
 #
 # Configuration options specific to the internal http server
 server:
-    # Buffers usually should be configured to be the same value.
-    # Explanation at https://docs.authelia.com/configuration/server.html
-    # Read buffer size configures the http server's maximum incoming request size in bytes.
-    read_buffer_size: 4096
-    # Write buffer size configures the http server's maximum outgoing response size in bytes.
-    write_buffer_size: 4096
-    # Set the single level path Authelia listens on, must be alphanumeric chars and should not contain any slashes.
-    # path: 'authelia'
+  # Buffers usually should be configured to be the same value.
+  # Explanation at https://docs.authelia.com/configuration/server.html
+  # Read buffer size configures the http server's maximum incoming request size in bytes.
+  read_buffer_size: 4096
+  # Write buffer size configures the http server's maximum outgoing response size in bytes.
+  write_buffer_size: 4096
+  # Set the single level path Authelia listens on, must be alphanumeric chars and should not contain any slashes.
+  # path: 'authelia'
 
 
 log_level: info
@@ -28,9 +28,9 @@ log_file_path: /config/authelia.log
 default_redirection_url: https://authelia.YOURDOMAIN.COM/
 
 totp:
-    issuer: authelia.com
-    period: 30
-    skew: 1
+  issuer: authelia.com
+  period: 30
+  skew: 1
 
 # Enable the following for Duo Push Notification support
 # https://www.authelia.com/docs/features/2fa/push-notifications.html
@@ -41,82 +41,141 @@ totp:
 #  secret_key: # use docker secret file instead AUTHELIA_DUO_API_SECRET_KEY_FILE
 
 authentication_backend:
-    file:
-        path: /config/users_database.yml
-        # customize passwords based on https://docs.authelia.com/configuration/authentication/file.html
-        password:
-            algorithm: argon2id
-            iterations: 1
-            salt_length: 16
-            parallelism: 8
-            memory: 1024 # blocks this much of the RAM. Tune this.
+  file:
+    path: /config/users_database.yml
+    # customize passwords based on https://docs.authelia.com/configuration/authentication/file.html
+    password:
+      algorithm: argon2id
+      iterations: 1
+      salt_length: 16
+      parallelism: 8
+      memory: 1024 # blocks this much of the RAM. Tune this.
 
 # https://docs.authelia.com/configuration/access-control.html
 access_control:
-    default_policy: deny
-    rules:
-        # Rules applied to everyone
-        #    - domain: radarr.example.com
-        #      policy: bypass
-        #      subject: "group:admins"
-        #      resources:
-        #      - "^/api/.*$"
-        #    - domain: "*.example.com"
-        #      policy: one_factor
-        - domain: 'authelia.YOURDOMAIN.COM'
-          policy: bypass
-        - domain: '*.YOURDOMAIN.COM'
-          policy: two_factor
-        - domain: 'YOURDOMAIN.COM'
-          policy: two_factor
+  default_policy: deny
+  rules:
+    # ----------------------------------------------------------------------
+    # Policies below bypass oauth as for api calls
+    # ----------------------------------------------------------------------
+    # LIDARR
+    # ----------------------------------------------------------------------
+    - domain: 'YOURDOMAIN.COM'
+      resources:
+        - '^/(lidarr)?/api/.*$'
+      policy: bypass
+    - domain:
+        - lidarr.YOURDOMAIN.COM
+      resources:
+        - '^/(lidarr)?/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # READARR
+    # ----------------------------------------------------------------------
+    - domain: 'YOURDOMAIN.COM'
+      resources:
+        - '^/(readarr)?/api/.*$'
+      policy: bypass
+    - domain:
+        - readarr.YOURDOMAIN.COM
+      resources:
+        - '^/(readarr)?/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # RADARR
+    # ----------------------------------------------------------------------
+    - domain: 'YOURDOMAIN.COM'
+      resources:
+        - '^/(radarr|radarr-4k)?/api/.*$'
+      policy: bypass
+    - domain:
+        - radarr.YOURDOMAIN.COM
+        - radarr-4k.YOURDOMAIN.COM
+      resources:
+        - '^/(radarr|radarr-4k)?/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # SONARR
+    # ----------------------------------------------------------------------
+    - domain: 'YOURDOMAIN.COM'
+      resources:
+        - '^/(sonarr|sonarr-4k)?/api/.*$'
+      policy: bypass
+    - domain:
+        - 'sonarr.YOURDOMAIN.COM'
+        - 'sonarr-4k.YOURDOMAIN.COM'
+      resources:
+        - '^/(sonarr|sonarr-4k)?/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # READARR
+    # ----------------------------------------------------------------------
+    - domain: 'YOURDOMAIN.COM'
+      resources:
+        - '^/sabnzbd/api/.*$'
+      policy: bypass
+    - domain:
+        - sabnzbd.YOURDOMAIN.COM
+      resources:
+        - '^/sabnzbd/api/.*$'
+      policy: bypass
+    # ----------------------------------------------------------------------
+    # end bypass policies
+    # ----------------------------------------------------------------------
+    - domain: 'authelia.YOURDOMAIN.COM'
+      policy: bypass
+    - domain: '*.YOURDOMAIN.COM'
+      policy: two_factor
+    - domain: 'YOURDOMAIN.COM'
+      policy: two_factor
 
 session:
-    name: authelia_session
-    # This secret can also be set using the env variables AUTHELIA_SESSION_SECRET_FILE
-    # Used a different secret, but the same site as jwt_secret above.
-    # secret: SECRET_GOES_HERE # use docker secret file instead AUTHELIA_SESSION_SECRET_FILE
-    # The time in seconds before the cookie expires and session is reset.
-    expiration: 1h
-    # The inactivity time in seconds before the session is reset.
-    inactivity: 5m
-    # The remember me duration.
-    # Value of 0 disables remember me.
-    # Value is in seconds, or duration notation. See: https://docs.authelia.com/configuration/index.html#duration-notation-format
-    # Longer periods are considered less secure because a stolen cookie will last longer giving attackers more time to spy
-    # or attack. Currently the default is 1M or 1 month.
-    remember_me_duration: 1w
-    domain: YOURDOMAIN.COM # Should match whatever your root protected domain is
-    # Optional. Can improve performance on a busy system. If not enabled, session info is stored in memory.
-    redis:
-        host: authredis
-        port: 6379
-        # This secret can also be set using the env variables AUTHELIA_SESSION_REDIS_PASSWORD_FILE
-        # password: ${REDIS_PASSWORD}
+  name: authelia_session
+  # This secret can also be set using the env variables AUTHELIA_SESSION_SECRET_FILE
+  # Used a different secret, but the same site as jwt_secret above.
+  # secret: SECRET_GOES_HERE # use docker secret file instead AUTHELIA_SESSION_SECRET_FILE
+  # The time in seconds before the cookie expires and session is reset.
+  expiration: 1h
+  # The inactivity time in seconds before the session is reset.
+  inactivity: 5m
+  # The remember me duration.
+  # Value of 0 disables remember me.
+  # Value is in seconds, or duration notation. See: https://docs.authelia.com/configuration/index.html#duration-notation-format
+  # Longer periods are considered less secure because a stolen cookie will last longer giving attackers more time to spy
+  # or attack. Currently the default is 1M or 1 month.
+  remember_me_duration: 1w
+  domain: YOURDOMAIN.COM # Should match whatever your root protected domain is
+  # Optional. Can improve performance on a busy system. If not enabled, session info is stored in memory.
+  redis:
+    host: authredis
+    port: 6379
+    # This secret can also be set using the env variables AUTHELIA_SESSION_REDIS_PASSWORD_FILE
+    # password: ${REDIS_PASSWORD}
 
 regulation:
-    max_retries: 3
-    find_time: 120
-    ban_time: 300
+  max_retries: 3
+  find_time: 120
+  ban_time: 300
 
 storage:
-    # For local storage, uncomment lines below and comment out mysql. https://docs.authelia.com/configuration/storage/sqlite.html
-    # local:
-    #     path: /config/db.sqlite3
-    mysql:
-        # MySQL allows running multiple authelia instances. Create database and enter details below.
-        host: authmariadb
-        port: 3306
-        database: authelia
-        username: authelia
+  # For local storage, uncomment lines below and comment out mysql. https://docs.authelia.com/configuration/storage/sqlite.html
+  # local:
+  #     path: /config/db.sqlite3
+  mysql:
+    # MySQL allows running multiple authelia instances. Create database and enter details below.
+    host: authmariadb
+    port: 3306
+    database: authelia
+    username: authelia
 
 notifier:
-    smtp:
-        username: YOUR_SMTP_USER
-        # This secret can also be set using the env variables AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
-        # password: # use docker secret file instead AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
-        host: SMTP_SERVER
-        port: 587
-        sender: YOUR_SENDER_ADDRESS
+  smtp:
+  username: YOUR_SMTP_USER
+  # This secret can also be set using the env variables AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
+  # password: # use docker secret file instead AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
+  host: SMTP_SERVER
+  port: 587
+  sender: YOUR_SENDER_ADDRESS
 # For testing purpose, notifications can be sent in a file. Be sure map the volume in docker-compose.
 # filesystem:
-#     filename: /tmp/authelia/notification.txt
+#    filename: /tmp/authelia/notification.txt
