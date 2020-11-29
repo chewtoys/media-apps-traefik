@@ -19,3 +19,11 @@ Access sabnzbd at `https://<yourdomain.com>/sabnzbd`
 The default credentials for nzbget are user: **nzbget** password: **tegbzn6789**
 
 Access nzbget at `https://<yourdomain.com>/nzbget`
+
+## Deluge
+
+Default password is `deluge`
+
+## Qbittorrent
+
+Default username is `admin` and password is `adminadmin`
