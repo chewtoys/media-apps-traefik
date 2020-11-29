@@ -578,7 +578,7 @@ services:
       - traefik.http.routers.qbittorrent-rtr.rule=Host(`qbittorrent.${DOMAIN_NAME}`)
       # ------------------------------------------------------------------------
       # HTTP Services
-      - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=6789
+      - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=8080
       - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
       # ------------------------------------------------------------------------
       # Middlewares
