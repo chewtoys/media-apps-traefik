@@ -45,7 +45,7 @@ services:
       - --serversTransport.insecureSkipVerify=true
       - --log=true
       # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-      - --log.level=INFO
+      - --log.level=ERROR
       - --accessLog=true
       - --accessLog.filePath=/config/traefik.log
       # Configuring a buffer of 100 lines
