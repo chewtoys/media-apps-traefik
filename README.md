@@ -76,6 +76,20 @@ Comment remove or change these lines in the traefik service in the `docker-compo
 - --traefik.http.routers.traefik-rtr.entrypoints=http
 ```
 
+## Authelia MFA with LDAP
+
+Sample workflow, navigate your app, example `https://sonarr.yourdomain.com`, you'll be presented with this login screen.
+
+![authenticate](images/authenticate.gif)
+
+Once you authenticate, then you can navigate to the rest of the apps easily. The cookies are set to for 1 week, you can extend or shrink that by editing the authelia configuration file.
+
+Navigate to https://radarr.yourdomain.com after authentication.
+
+![navigate-after](images/navigate.gif)
+
+You can obviously set authentication at the app as well for another level of security.
+
 ## Sabnzbd
 
 Requires to edit the `$DOCKER_DIR/sabnzbd/app/sabnzbd.ini` file to whitelist the domain since by default there's no authentication and it's being access via reverse-proxy.
