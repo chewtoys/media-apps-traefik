@@ -5,5 +5,5 @@ users:
     password: password hashed with above command
     email: [USERS-EMAIL]
     groups:
-      - Admins
-      - Dev
+      - admins
+      - dev
