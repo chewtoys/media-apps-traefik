@@ -1,0 +1,9 @@
+users:
+  username: # change this
+    displayname: '[USERS REAL NAME]'
+    # docker run authelia/authelia:latest authelia hash-password <YOURPASSWORD>
+    password: password hashed with above command
+    email: [USERS-EMAIL]
+    groups:
+      - Admins
+      - Dev
