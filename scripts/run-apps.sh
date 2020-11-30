@@ -1,19 +1,19 @@
 #!/bin/bash
 
 echo "--------------------------------------------"
-echo "Clearing network"
+echo "Clearing unused networks"
 echo "--------------------------------------------"
 sleep 2
 sudo docker network prune -f
 
 echo "--------------------------------------------"
-echo "Pulling new images"
+echo "Pulling new images (if any are available)"
 echo "--------------------------------------------"
 sleep 2
 sudo docker-compose pull
 
 echo "--------------------------------------------"
-echo "Running apps"
+echo "Running (or updating) apps"
 echo "--------------------------------------------"
 sleep 2
 sudo docker-compose up -d --remove-orphans
