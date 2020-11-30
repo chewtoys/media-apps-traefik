@@ -289,7 +289,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
       - ${DOCKER_DIR}/plex-transcode:/transcode
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -333,7 +333,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex-4k:/config
       - ${DOCKER_DIR}/plex-4k-transcode:/transcode
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -750,7 +750,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr:/config
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -790,7 +790,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr-4k:/config
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -827,7 +827,7 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/sonarr:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -866,7 +866,7 @@ services:
     volumes:
       - ${DOCKER_DIR}/sonarr-4k:/config
       - downloads:/data/downloads
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -903,7 +903,7 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/radarr:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -941,7 +941,7 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/radarr-4k:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -979,7 +979,7 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/lidarr:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -1018,7 +1018,7 @@ services:
       - calibre
     volumes:
       - ${DOCKER_DIR}/readarr:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -1056,7 +1056,7 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/mylar3:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -1096,7 +1096,7 @@ services:
       - DOCKER_MODS=ghcr.io/linuxserver/calibre-web:calibre|ghcr.io/linuxserver/mods:lazylibrarian-ffmpeg
     volumes:
       - ${DOCKER_DIR}/lazylib:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     labels:
       - traefik.enable=true
@@ -1209,7 +1209,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/calibre:/config
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1248,7 +1248,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/calibre-web:/config
-      - data:/data
+      - nfsData:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1438,7 +1438,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
-      - data:/data
+      - nfsData:/data
       - downloads:/data/downloads
     image: ghcr.io/hotio/unpackerr:nightly
 
@@ -1490,12 +1490,12 @@ volumes:
       type: none
       device: ${LOCAL_DL_DIR}
 
-  data:
-    driver: local
+  # NFS Mounts
+  nfsData:
     driver_opts:
-      o: bind
-      type: none
-      device: ${DATA_DIR}
+      type: nfs
+      o: addr=${NAS_IP},rsize=65536,wsize=65536,tcp,noatime,nolock,soft,rw
+      device: :/volume1/data
 
 secrets:
   acme_email:
