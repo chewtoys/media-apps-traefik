@@ -5,7 +5,8 @@
 host: 0.0.0.0
 port: 9091
 log_level: warn
-#
+log_file_path: /config/authelia.log
+
 # Configuration options specific to the internal http server
 server:
   # Buffers usually should be configured to be the same value.
@@ -17,9 +18,6 @@ server:
   # Set the single level path Authelia listens on, must be alphanumeric chars and should not contain any slashes.
   # path: 'authelia'
 
-
-log_level: info
-log_file_path: /config/authelia.log
 # This secret can also be set using the env variables AUTHELIA_JWT_SECRET_FILE
 # I used this site to generate the secret: https://www.grc.com/passwords.htm
 # jwt_secret: SECRET_GOES_HERE # use docker secret file instead AUTHELIA_JWT_SECRET_FILE
@@ -43,7 +41,10 @@ totp:
 authentication_backend:
   file:
     path: /config/users_database.yml
+    # ------------------------------------------------------------------------------------------------------------------
+    # Has a password with docker run authelia/authelia:latest authelia hash-password <YOURPASSWORD>
     # customize passwords based on https://docs.authelia.com/configuration/authentication/file.html
+    # ------------------------------------------------------------------------------------------------------------------
     password:
       algorithm: argon2id
       iterations: 1
@@ -55,143 +56,143 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Policies below bypass oauth as for api calls
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # BAZARR
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'bazarr.YOURDOMAIN.COM'
-      - 'bazarr-4k.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'bazarr.YOURDOMAIN.COM'
+        - 'bazarr-4k.YOURDOMAIN.COM'
       resources:
-      - '^(/bazarr(-4k)?)?/api/.*$'
+        - '^(/bazarr(-4k)?)?/api/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # JACKETT
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'jackett.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'jackett.YOURDOMAIN.COM'
       resources:
-      - '^(/jackett)?/(api|dl)/.*$'
+        - '^(/jackett)?/(api|dl)/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # NZBHYDRA2
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'nzbhydra.YOURDOMAIN.COM'
-      - 'nzbhydra2.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'nzbhydra.YOURDOMAIN.COM'
+        - 'nzbhydra2.YOURDOMAIN.COM'
       resources:
-      - '^(/nzbhydra(2)?)?/(api|getnzb|gettorrent|rss|torznab).*$'
+        - '^(/nzbhydra(2)?)?/(api|getnzb|gettorrent|rss|torznab).*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # LIDARR
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'lidarr.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'lidarr.YOURDOMAIN.COM'
       resources:
-      - '^(/lidarr)?/api/.*$'
+        - '^(/lidarr)?/api/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # OMBI
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'ombi.YOURDOMAIN.COM'
-      - 'ombi-4k.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'ombi.YOURDOMAIN.COM'
+        - 'ombi-4k.YOURDOMAIN.COM'
       resources:
-      - '^(/ombi(-4k))?/(api|swagger)/.*$'
+        - '^(/ombi(-4k))?/(api|swagger)/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # READARR
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'readarr.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'readarr.YOURDOMAIN.COM'
       resources:
-      - '^(/readarr)?/api/.*$'
+        - '^(/readarr)?/api/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # RADARR
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'radarr.YOURDOMAIN.COM'
-      - 'radarr-4k.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'radarr.YOURDOMAIN.COM'
+        - 'radarr-4k.YOURDOMAIN.COM'
       resources:
-      - '^(/radarr(-4k)?)?/api/.*$'
+        - '^(/radarr(-4k)?)?/api/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # SONARR
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'sonarr.YOURDOMAIN.COM'
-      - 'sonarr-4k.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'sonarr.YOURDOMAIN.COM'
+        - 'sonarr-4k.YOURDOMAIN.COM'
       resources:
-      - '^(/sonarr(-4k)?)?/api/.*$'
+        - '^(/sonarr(-4k)?)?/api/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # SABNZBD
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'sabnzbd.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'sabnzbd.YOURDOMAIN.COM'
       resources:
-      - '^/sabnzbd/api/.*$'
+        - '^/sabnzbd/api/.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # NZBGET
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'nzbget.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'nzbget.YOURDOMAIN.COM'
       resources:
-      - '^(/nzbget)?(/[^\/:]*:[^\/]*)?/(jsonrpc|jsonprpc|xmlrpc).*$'
+        - '^(/nzbget)?(/[^\/:]*:[^\/]*)?/(jsonrpc|jsonprpc|xmlrpc).*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # PORTAINER
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'portainer.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'portainer.YOURDOMAIN.COM'
       resources:
-      - '^(/portainer)?/api/websocket.*$'
+        - '^(/portainer)?/api/websocket.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # QBITTORRENT
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'qbittorrent.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'qbittorrent.YOURDOMAIN.COM'
       resources:
-      - '^(/qbittorrent)?/api.*$'
+        - '^(/qbittorrent)?/api.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # TAUTULLI
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'YOURDOMAIN.COM'
-      - 'tautulli.YOURDOMAIN.COM'
-      - 'tautulli-4k.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - 'tautulli.YOURDOMAIN.COM'
+        - 'tautulli-4k.YOURDOMAIN.COM'
       resources:
-      - '^(/tautulli(-4k)?)?/api.*$'
+        - '^(/tautulli(-4k)?)?/api.*$'
       policy: bypass
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # end bypass policies
-    # --------------------------------------------------------------------------
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # MAIN DOMAIN SECTION
-    # --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     - domain:
-      - 'authelia.YOURDOMAIN.COM'
+        - 'authelia.YOURDOMAIN.COM'
       policy: bypass
     - domain:
-      - 'YOURDOMAIN.COM'
-      - '*.YOURDOMAIN.COM'
+        - 'YOURDOMAIN.COM'
+        - '*.YOURDOMAIN.COM'
       policy: two_factor
 
 session:
@@ -243,4 +244,4 @@ notifier:
     sender: YOUR-SENDER@EMAIL.COM
 # For testing purpose, notifications can be sent in a file. Be sure map the volume in docker-compose.
 # filesystem:
-  # filename: /tmp/authelia/notification.txt
+# filename: /tmp/authelia/notification.txt
