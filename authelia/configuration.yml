@@ -39,18 +39,121 @@ totp:
 #  secret_key: # use docker secret file instead AUTHELIA_DUO_API_SECRET_KEY_FILE
 
 authentication_backend:
-  file:
-    path: /config/users_database.yml
-    # ------------------------------------------------------------------------------------------------------------------
-    # Has a password with docker run authelia/authelia:latest authelia hash-password <YOURPASSWORD>
-    # customize passwords based on https://docs.authelia.com/configuration/authentication/file.html
-    # ------------------------------------------------------------------------------------------------------------------
-    password:
-      algorithm: argon2id
-      iterations: 1
-      salt_length: 16
-      parallelism: 8
-      memory: 1024 # blocks this much of the RAM. Tune this.
+  # Disable both the HTML element and the API for reset password functionality
+  disable_reset_password: false
+
+  # The amount of time to wait before we refresh data from the authentication backend. Uses duration notation.
+  # To disable this feature set it to 'disable', this will slightly reduce security because for Authelia, users
+  # will always belong to groups they belonged to at the time of login even if they have been removed from them in LDAP.
+  # To force update on every request you can set this to '0' or 'always', this will increase processor demand.
+  # See the below documentation for more information.
+  # Duration Notation docs:  https://docs.authelia.com/configuration/index.html#duration-notation-format
+  # Refresh Interval docs: https://docs.authelia.com/configuration/authentication/ldap.html#refresh-interval
+  refresh_interval: 5m
+
+  # LDAP backend configuration.
+  #
+  # This backend allows Authelia to be scaled to more
+  # than one instance and therefore is recommended for
+  # production.
+  ldap:
+    # The LDAP implementation, this affects elements like the attribute utilised for resetting a password.
+    # Acceptable options are as follows:
+    # - 'activedirectory' - For Microsoft Active Directory.
+    # - 'custom' - For custom specifications of attributes and filters.
+    # This currently defaults to 'custom' to maintain existing behaviour.
+    #
+    # Depending on the option here certain other values in this section have a default value, notably all
+    # of the attribute mappings have a default value that this config overrides, you can read more
+    # about these default values at https://docs.authelia.com/configuration/authentication/ldap.html#defaults
+    #implementation: custom
+
+    # The url to the ldap server. Scheme can be ldap:// or ldaps://
+    url: ldaps://<LDAP-SERVER-IP>
+
+    # Skip verifying the server certificate (to allow self-signed certificate).
+    skip_verify: true
+
+    # The base dn for every entries
+    base_dn: dc=<INT>,dc=<YOUR-DOMAIN>,dc=<COM>
+
+    # The attribute holding the username of the user. This attribute is used to populate
+    # the username in the session information. It was introduced due to #561 to handle case
+    # insensitive search queries.
+    # For you information, Microsoft Active Directory usually uses 'sAMAccountName' and OpenLDAP
+    # usually uses 'uid'
+    # Beware that this attribute holds the unique identifiers for the users binding the user and the configuration
+    # stored in database. Therefore only single value attributes are allowed and the value
+    # must never be changed once attributed to a user otherwise it would break the configuration
+    # for that user. Technically, non-unique attributes like 'mail' can also be used but we don't recommend using
+    # them, we instead advise to use the attributes mentioned above (sAMAccountName and uid) to follow
+    # https://www.ietf.org/rfc/rfc2307.txt.
+    username_attribute: uid
+
+    # An additional dn to define the scope to all users
+    additional_users_dn: cn=users
+
+    # The users filter used in search queries to find the user profile based on input filled in login form.
+    # Various placeholders are available to represent the user input and back reference other options of the configuration:
+    # - {input} is a placeholder replaced by what the user inputs in the login form.
+    # - {username_attribute} is a mandatory placeholder replaced by what is configured in `username_attribute`.
+    # - {mail_attribute} is a placeholder replaced by what is configured in `mail_attribute`.
+    # - DON'T USE - {0} is an alias for {input} supported for backward compatibility but it will be deprecated in later versions, so please don't use it.
+    #
+    # Recommended settings are as follows:
+    # - Microsoft Active Directory: (&({username_attribute}={input})(objectCategory=person)(objectClass=user))
+    # - OpenLDAP: (&({username_attribute}={input})(objectClass=person))' or '(&({username_attribute}={input})(objectClass=inetOrgPerson))
+    #
+    # To allow sign in both with username and email, one can use a filter like
+    # (&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person))
+    users_filter: (&({username_attribute}={input})(objectClass=person))
+
+    # An additional dn to define the scope of groups
+    additional_groups_dn: cn=groups
+
+    # The groups filter used in search queries to find the groups of the user.
+    # - {input} is a placeholder replaced by what the user inputs in the login form.
+    # - {username} is a placeholder replace by the username stored in LDAP (based on `username_attribute`).
+    # - {dn} is a matcher replaced by the user distinguished name, aka, user DN.
+    # - {username_attribute} is a placeholder replaced by what is configured in `username_attribute`.
+    # - {mail_attribute} is a placeholder replaced by what is configured in `mail_attribute`.
+    # - DON'T USE - {0} is an alias for {input} supported for backward compatibility but it will be deprecated in later versions, so please don't use it.
+    # - DON'T USE - {1} is an alias for {username} supported for backward compatibility but it will be deprecated in later version, so please don't use it.
+    groups_filter: (&(member={dn})(objectclass=groupOfNames))
+
+    # The attribute holding the name of the group
+    group_name_attribute: cn
+
+    # The attribute holding the mail address of the user. If multiple email addresses are defined for a user, only the first
+    # one returned by the LDAP server is used.
+    mail_attribute: mail
+
+    # The attribute holding the display name of the user. This will be used to greet an authenticated user.
+    # display_name_attribute: displayname
+
+    # The username and password of the admin user.
+    # You need this information from your LDAP server, not all are the same
+    user: uid=root,cn=users,dc=<INT>,dc=<YOUR-DOMAIN>,dc=<COM>
+    # Password can also be set using a secret: https://docs.authelia.com/configuration/secrets.html
+    # password: password
+
+  # ------------------------------------------------------------------------------------------------
+  # Uncomment below section for a simpler file based authentication, make sure the files have
+  # appropriate permissions to restrict snooping of data.
+  # ------------------------------------------------------------------------------------------------
+  # file:
+  #   path: /config/users_database.yml
+  #   # ----------------------------------------------------------------------------------------------
+  #   # Has a password with docker run authelia/authelia:latest authelia hash-password <YOURPASSWORD>
+  #   # customize passwords based on https://docs.authelia.com/configuration/authentication/file.html
+  #   # ----------------------------------------------------------------------------------------------
+  #   password:
+  #     algorithm: argon2id
+  #     iterations: 1
+  #     salt_length: 16
+  #     parallelism: 8
+  #     # blocks this much of the RAM. Tune this.
+  #     memory: 1024
 
 # https://docs.authelia.com/configuration/access-control.html
 access_control:
