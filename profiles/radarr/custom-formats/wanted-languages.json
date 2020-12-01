@@ -1,0 +1,15 @@
+{
+  "name": "Wanted Languages",
+  "includeCustomFormatWhenRenaming": false,
+  "specifications": [
+    {
+      "name": "Spanish",
+      "implementation": "LanguageSpecification",
+      "negate": false,
+      "required": true,
+      "fields": {
+        "value": 2
+      }
+    }
+  ]
+}

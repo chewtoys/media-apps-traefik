@@ -1,0 +1,33 @@
+{
+  "name": "Repack/Proper",
+  "includeCustomFormatWhenRenaming": false,
+  "specifications": [
+    {
+      "name": "Repack",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "Repack"
+      }
+    },
+    {
+      "name": "Proper",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "Proper"
+      }
+    },
+    {
+      "name": "Rerip",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "Rerip"
+      }
+    }
+  ]
+}

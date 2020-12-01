@@ -1,0 +1,24 @@
+{
+  "name": "High Quality Releases",
+  "includeCustomFormatWhenRenaming": false,
+  "specifications": [
+    {
+      "name": "Preferred  1",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "\\b(framestor|epsilon|sumvision)\\w?"
+      }
+    },
+    {
+      "name": "Preferred  2",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "\\b(legi0n)\\w?"
+      }
+    }
+  ]
+}
