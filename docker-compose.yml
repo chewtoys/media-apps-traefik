@@ -350,6 +350,45 @@ services:
       # - traefik.http.routers.sabnzbd-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sabnzbd:latest
+    image: pannal/kitana:latest
+
+  # nzbget - usenet downloader written in C++ (easynews)
+  # Docs: https://hotio.dev/containers/nzbget/
+  nzbget:
+    container_name: nzbget
+    hostname: nzbget
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/nzbget:/config
+      - downloads:/data/downloads
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.nzbget-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.nzbget-rtr.entrypoints=https
+      - traefik.http.routers.nzbget-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      - traefik.http.routers.nzbget-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      # - traefik.http.routers.nzbget-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/nzbget:latest
 
   # qbittorrent - torrent download client with VPN built in
   # Docs: https://github.com/binhex/arch-qbittorrentvpn
@@ -772,7 +811,8 @@ services:
     networks:
       apps: {}
     ports:
-      - 32896:8096/tcp
+      - 8096:8096/tcp
+      - 1900:1900/udp
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
@@ -800,46 +840,6 @@ services:
       # - traefik.http.routers.jellyfin-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
       - traefik.http.routers.jellyfin-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/jellyfin:nightly
-
-  # jellyfin - media server
-  # Docs: https://hotio.dev/containers/jellyfin/
-  jellyfin-4k:
-    container_name: jellyfin-4k
-    hostname: jellyfin-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    ports:
-      - 32996:8096/tcp
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DEBUG=no
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/jellyfin-4k:/config
-      - nfsData:/data
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.jellyfin-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.jellyfin-4k-rtr.entrypoints=https
-      - traefik.http.routers.jellyfin-4k-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.jellyfin-4k-rtr.rule=Host(`jellyfin-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/jellyfin-4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.jellyfin-4k-svc.loadbalancer.server.port=8096
-      - traefik.http.routers.jellyfin-4k-rtr.service=jellyfin-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.jellyfin-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.jellyfin-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/jellyfin:nightly
 
@@ -956,45 +956,6 @@ services:
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.kitana-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: pannal/kitana:latest
-
-  # nzbget - usenet downloader written in C++ (easynews)
-  # Docs: https://hotio.dev/containers/nzbget/
-  nzbget:
-    container_name: nzbget
-    hostname: nzbget
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/nzbget:/config
-      - downloads:/data/downloads
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.nzbget-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.nzbget-rtr.entrypoints=https
-      - traefik.http.routers.nzbget-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
-      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.nzbget-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.nzbget-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/nzbget:latest
 
   # bazarr - automatic download subtitles
   # Docs: https://hotio.dev/containers/bazarr/
