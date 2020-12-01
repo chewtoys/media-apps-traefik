@@ -1054,6 +1054,12 @@ services:
       - ${DOCKER_DIR}/sonarr:/config
       - nfsData:/data
       - downloads:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1092,6 +1098,12 @@ services:
       - ${DOCKER_DIR}/sonarr-4k:/config
       - downloads:/data/downloads
       - nfsData:/data
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1130,6 +1142,12 @@ services:
       - ${DOCKER_DIR}/radarr:/config
       - nfsData:/data
       - downloads:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1168,6 +1186,12 @@ services:
       - ${DOCKER_DIR}/radarr-4k:/config
       - nfsData:/data
       - downloads:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1206,6 +1230,12 @@ services:
       - ${DOCKER_DIR}/lidarr:/config
       - nfsData:/data
       - downloads:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1245,6 +1275,12 @@ services:
       - ${DOCKER_DIR}/readarr:/config
       - nfsData:/data
       - downloads:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1281,8 +1317,16 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/mylar3:/config
+      # TEMP DIR for DDL Downloads
+      - ${DOCKER_DIR}/mylar3/downloads:/downloads
       - nfsData:/data
       - downloads:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - nzbget
+      - sabnzbd
+      - deluge
+      - qbittorrent
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
