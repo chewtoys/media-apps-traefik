@@ -68,7 +68,7 @@ services:
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.${DOMAIN_NAME}`)
       - --providers.docker.exposedByDefault=false
-      - --providers.docker.network=media-apps-compose_apps
+      - --providers.docker.network=media-apps-traefik_apps
       - --providers.docker.swarmMode=false
       # Load dynamic configuration from one or more .toml or .yml files in a directory.
       - --providers.file.directory=/config/rules
