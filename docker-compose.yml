@@ -732,6 +732,12 @@ services:
       - PGID=${PGID}
       - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      #-------------------------------------------------------------------------
+      # If you have an nvidia GPU
+      #-------------------------------------------------------------------------
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      #-------------------------------------------------------------------------
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
@@ -776,6 +782,12 @@ services:
       - PGID=${PGID}
       - PLEX_CLAIM=${PLEX_4K_CLAIM}
       - ADVERTISE_IP=${PLEX_4K_ADVERTISE_IP}
+      #-------------------------------------------------------------------------
+      # If you have an nvidia GPU
+      #-------------------------------------------------------------------------
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      #-------------------------------------------------------------------------
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex-4k:/config
@@ -820,6 +832,11 @@ services:
       - PGID=${PGID}
       - DEBUG=no
       - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_URI}
+      #-------------------------------------------------------------------------
+      # If you have an nvidia GPU
+      #-------------------------------------------------------------------------
+      - NVIDIA_VISIBLE_DEVICES=all
+      #-------------------------------------------------------------------------
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/jellyfin:/config
