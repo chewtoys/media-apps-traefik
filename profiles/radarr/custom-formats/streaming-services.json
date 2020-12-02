@@ -1,0 +1,105 @@
+{
+  "name": "Streaming Services",
+  "includeCustomFormatWhenRenaming": true,
+  "specifications": [
+    {
+      "name": "Amazon",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(amzn|amazon).?web.?dl"
+      }
+    },
+    {
+      "name": "Netflix",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(nf|netflix).?web.?dl"
+      }
+    },
+    {
+      "name": "AppleTV+",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(atvp).?web.?dl"
+      }
+    },
+    {
+      "name": "Disney+",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(dsnp|dsny|disney).?web.?dl"
+      }
+    },
+    {
+      "name": "DCU",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(dcu).?web.?dl"
+      }
+    },
+    {
+      "name": "HBO Max",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(hmax).?web.?dl"
+      }
+    },
+    {
+      "name": "HBO",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(hbo).?web.?(dl|rip)"
+      }
+    },
+    {
+      "name": "Youtube Red",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(red).?web.?dl"
+      }
+    },
+    {
+      "name": "Quibi",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(qibi).?web.?dl"
+      }
+    },
+    {
+      "name": "iTunes",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(it).?web.?dl"
+      }
+    },
+    {
+      "name": "Hulu",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": false,
+      "fields": {
+        "value": "(hulu).?web.?dl"
+      }
+    }
+  ]
+}

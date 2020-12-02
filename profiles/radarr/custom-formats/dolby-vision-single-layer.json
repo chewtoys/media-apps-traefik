@@ -1,0 +1,24 @@
+{
+  "name": "Dolby Vision (Single Layer)",
+  "includeCustomFormatWhenRenaming": false,
+  "specifications": [
+    {
+      "name": "Dolby Vision (Single Layer)",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": {
+        "value": "sl.?dv|single.?layer.?dovi"
+      }
+    },
+    {
+      "name": "Remux",
+      "implementation": "QualityModifierSpecification",
+      "negate": false,
+      "required": true,
+      "fields": {
+        "value": 5
+      }
+    }
+  ]
+}

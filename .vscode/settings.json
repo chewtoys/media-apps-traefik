@@ -1,7 +1,7 @@
 {"workbench.colorCustomizations": {
-    "titleBar.activeBackground": "#df732c",
+    "titleBar.activeBackground": "#2c89df",
     "titleBar.activeForeground": "#ffffff",
-    "titleBar.inactiveBackground": "#ce7e5a",
+    "titleBar.inactiveBackground": "#a7bbf3",
     "titleBar.inactiveForeground": "#ffffff"
   },
   "cSpell.ignoreWords": [
