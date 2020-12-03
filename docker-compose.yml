@@ -329,7 +329,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sabnzbd:/config
-      - downloads:/data/downloads
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -368,7 +368,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbget:/config
-      - downloads:/data/downloads
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -424,7 +424,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
-      - downloads:/data/downloads
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -479,7 +479,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/deluge:/config
-      - downloads:/data/downloads
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -517,7 +517,7 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/jackett:/config
-      - downloads:/data/downloads
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -555,7 +555,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbhydra2:/config
-      - downloads:/data/downloads
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -706,8 +706,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     image: ghcr.io/hotio/unpackerr:nightly
 
   #-----------------------------------------------------------------------------
@@ -736,7 +736,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
       - ${DOCKER_DIR}/plex-transcode:/transcode
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -780,7 +780,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex-4k:/config
       - ${DOCKER_DIR}/plex-4k-transcode:/transcode
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -823,7 +823,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/jellyfin:/config
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -977,7 +977,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr:/config
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1017,7 +1017,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr-4k:/config
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1054,8 +1054,8 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/sonarr:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1098,8 +1098,8 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/sonarr-4k:/config
-      - downloads:/data/downloads
-      - nfsData:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
+      - ${DATA_DIR}:/data
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1142,8 +1142,8 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/radarr:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1186,8 +1186,8 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/radarr-4k:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1230,8 +1230,8 @@ services:
       - PGID=${PGID}
     volumes:
       - ${DOCKER_DIR}/lidarr:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1275,8 +1275,8 @@ services:
       - calibre
     volumes:
       - ${DOCKER_DIR}/readarr:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1320,9 +1320,9 @@ services:
     volumes:
       - ${DOCKER_DIR}/mylar3:/config
       # TEMP DIR for DDL Downloads
-      - ${DOCKER_DIR}/mylar3/downloads:/downloads
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DOCKER_DIR}/mylar3/${DOWNLOAD_DIR}:/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1367,8 +1367,8 @@ services:
       - DOCKER_MODS=ghcr.io/linuxserver/calibre-web:calibre|ghcr.io/linuxserver/mods:lazylibrarian-ffmpeg
     volumes:
       - ${DOCKER_DIR}/lazylib:/config
-      - nfsData:/data
-      - downloads:/data/downloads
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1480,7 +1480,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/calibre:/config
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1519,7 +1519,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/calibre-web:/config
-      - nfsData:/data
+      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
@@ -1583,22 +1583,6 @@ networks:
     ipam:
       config:
         - subnet: 172.22.0.0/24
-
-volumes:
-  # LOCAL Mounts
-  downloads:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: ${LOCAL_DL_DIR}
-
-  # NFS Mounts
-  nfsData:
-    driver_opts:
-      type: nfs
-      o: addr=${NAS_IP},rsize=65536,wsize=65536,tcp,noatime,nolock,soft,rw
-      device: :/volume1/data
 
 secrets:
   acme_email:
