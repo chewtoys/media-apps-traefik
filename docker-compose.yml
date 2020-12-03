@@ -1393,7 +1393,7 @@ services:
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.ombi-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/ombi:testing
+    image: ghcr.io/hotio/ombi:latest
 
   # ombi - sonarr, radarr, lidarr middleware (request tv, movies, music)
   # Docs: https://hotio.dev/containers/ombi/
@@ -1429,7 +1429,7 @@ services:
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.ombi-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/ombi:testing
+    image: ghcr.io/hotio/ombi:latest
 
   # calibre - ebook management database
   # docs: https://hub.docker.com/r/linuxserver/calibre
