@@ -814,54 +814,6 @@ services:
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/plex:autoscan
 
-  # jellyfin - media server
-  # Docs: https://hotio.dev/containers/jellyfin/
-  jellyfin:
-    container_name: jellyfin
-    hostname: jellyfin
-    restart: unless-stopped
-    networks:
-      apps: {}
-    ports:
-      - 8096:8096/tcp
-      - 1900:1900/udp
-      - 7359:7359/udp
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DEBUG=no
-      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_URI}
-      #-------------------------------------------------------------------------
-      # If you have an nvidia GPU
-      #-------------------------------------------------------------------------
-      - NVIDIA_VISIBLE_DEVICES=all
-      #-------------------------------------------------------------------------
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/jellyfin:/config
-      - nfsData:/data
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.jellyfin-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.jellyfin-rtr.entrypoints=https
-      - traefik.http.routers.jellyfin-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.jellyfin-rtr.rule=Host(`jellyfin.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/jellyfin`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.jellyfin-svc.loadbalancer.server.port=8096
-      - traefik.http.routers.jellyfin-rtr.service=jellyfin-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.jellyfin-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.jellyfin-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/jellyfin:nightly
-
   # tautulli - plex monitor
   # Docs: https://hotio.dev/containers/tautulli/
   tautulli:
