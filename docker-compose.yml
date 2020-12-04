@@ -350,7 +350,6 @@ services:
       # - traefik.http.routers.sabnzbd-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sabnzbd:latest
-    image: pannal/kitana:latest
 
   # nzbget - usenet downloader written in C++ (easynews)
   # Docs: https://hotio.dev/containers/nzbget/
@@ -915,6 +914,7 @@ services:
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.kitana-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
+    image: pannal/kitana:latest
 
   # bazarr - automatic download subtitles
   # Docs: https://hotio.dev/containers/bazarr/
