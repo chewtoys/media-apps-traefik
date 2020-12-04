@@ -1,5 +1,7 @@
 ## PURPOSE
 
+> THIS IS A SCALED DOWN VERSION TO TEST ON LESS POWERFUL DEV MACHINE
+
 Collection of docker media centric and VPN apps. If there's anything on here you want to fix or improve feel free to fork and create a PR. If you're changing things, such as removing services from the compose file just because you don't want all of them, please do it in a separate build (clone it twice) if you're also going to submit a PR.
 
 ## All
