@@ -1277,7 +1277,7 @@ services:
     volumes:
       - ${DOCKER_DIR}/mylar3:/config
       # TEMP DIR for DDL Downloads
-      - ${DOCKER_DIR}/mylar3/${DOWNLOAD_DIR}:/downloads
+      - ${DOCKER_DIR}/mylar3/downloads:/downloads
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
