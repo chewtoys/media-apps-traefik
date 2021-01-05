@@ -755,7 +755,7 @@ services:
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.plex-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/plex:autoscan
+    image: ghcr.io/hotio/plex:release
 
   # plex - media server
   # Docs: https://hotio.dev/containers/plex/
@@ -799,7 +799,7 @@ services:
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.plex-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/plex:autoscan
+    image: ghcr.io/hotio/plex:release
 
   # tautulli - plex monitor
   # Docs: https://hotio.dev/containers/tautulli/
@@ -878,6 +878,26 @@ services:
       # - traefik.http.routers.tautulli-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/tautulli:latest
+
+  # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
+  # Docs: https://github.com/Cloudbox/autoscan
+  autoscan:
+    container_name: autoscan
+    hostname: autoscan
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=022
+      - DEBUG=yes
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/autoscan:/config
+      - ${DATA_DIR}:/data
+    image: ghcr.io/hotio/autoscan:nightly
 
   # kitana - plex plugin middleware (frontend)
   # Docs: https://github.com/pannal/Kitana
