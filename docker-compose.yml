@@ -899,6 +899,26 @@ services:
       - ${DATA_DIR}:/data
     image: ghcr.io/hotio/autoscan:nightly
 
+  # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
+  # Docs: https://github.com/Cloudbox/autoscan
+  autoscan-4k:
+    container_name: autoscan-4k
+    hostname: autoscan-4k
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=022
+      - DEBUG=yes
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/autoscan-4k:/config
+      - ${DATA_DIR}:/data
+    image: ghcr.io/hotio/autoscan:nightly
+
   # kitana - plex plugin middleware (frontend)
   # Docs: https://github.com/pannal/Kitana
   kitana:
