@@ -224,6 +224,7 @@ services:
       - TZ=${TZ}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/authredis:/bitnami/redis/data
       - ${DOCKER_DIR}/authredis/redis.conf:/opt/bitnami/redis/mounted-etc/redis.conf
     secrets:
@@ -252,6 +253,7 @@ services:
       - mysql
       - mysql_root
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/authmariadb:/config
     image: ghcr.io/linuxserver/mariadb:latest
 
@@ -515,6 +517,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/jackett:/config
       - ${DOWNLOAD_DIR}:/data/downloads
     labels:
@@ -591,6 +594,7 @@ services:
       - PGID=${PGID}
       - DEBUG=no
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/trackarr:/config
     labels:
       - traefik.enable=true
@@ -628,6 +632,7 @@ services:
       - PGID=${PGID}
       - DEBUG=no
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/requestrr:/config
     labels:
       - traefik.enable=true
@@ -665,6 +670,7 @@ services:
       - PGID=${PGID}
       - DEBUG=no
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/requestrr-4k:/config
     labels:
       - traefik.enable=true
@@ -1050,6 +1056,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
@@ -1094,6 +1101,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr-4k:/config
       - ${DOWNLOAD_DIR}:/data/downloads
       - ${DATA_DIR}:/data
@@ -1138,6 +1146,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
@@ -1182,6 +1191,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
@@ -1226,6 +1236,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/lidarr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
@@ -1271,6 +1282,7 @@ services:
       - PGID=${PGID}
       - calibre
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/readarr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
@@ -1315,6 +1327,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/mylar3:/config
       # TEMP DIR for DDL Downloads
       - ${DOCKER_DIR}/mylar3/downloads:/downloads
@@ -1363,6 +1376,7 @@ services:
       - DEBUG=no
       - DOCKER_MODS=ghcr.io/linuxserver/calibre-web:calibre|ghcr.io/linuxserver/mods:lazylibrarian-ffmpeg
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/lazylib:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
@@ -1401,6 +1415,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/ombi:/config
     labels:
       - traefik.enable=true
@@ -1437,6 +1452,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/ombi-4k:/config
     labels:
       - traefik.enable=true
