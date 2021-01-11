@@ -1240,6 +1240,7 @@ services:
       - ${DOCKER_DIR}/lidarr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
+      - ${DOWNLOAD_DIR}/ama/amd:/downloads-amd
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1266,6 +1267,54 @@ services:
       # - traefik.http.routers.lidarr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/lidarr:nightly
+
+  # amd - is a Lidarr companion script to automatically download music for Lidarr
+  # Docs: https://github.com/RandomNinjaAtk/docker-amd
+  amd:
+    container_name: amd
+    hostname: amd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - AUTOSTART=true
+      - SCRIPTINTERVAL=1h
+      - DOWNLOADMODE=wanted
+      - FALLBACKSEARCH=True
+      - LIST=both
+      - SearchType=both
+      - Concurrency=2
+      - EMBEDDED_COVER_QUALITY=80
+      - FORMAT=FLAC
+      - BITRATE=320
+      - ENABLEPOSTPROCESSING=true
+      - FORCECONVERT=false
+      - requirequality=false
+      - MatchDistance=7
+      - replaygain=true
+      - FolderPermissions=755
+      - FilePermissions=664
+      - MBRAINZMIRROR=https://musicbrainz.org
+      - MBRATELIMIT=1
+      - LidarrUrl=http://lidarr:8686/lidarr
+      - LidarrAPIkey=${LIDARR_API_KEY}
+      - ARL_TOKEN=${ARL_DEEZER_TOKEN}
+      - NOTIFYPLEX=true
+      - PLEXLIBRARYNAME=Music
+      - PLEXURL=http://plex:32400
+      - PLEXTOKEN=${PLEX_TOKEN}
+      - POSTPROCESSTHREADS=2
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/amd:/config
+      - ${DOWNLOAD_DIR}/ama/amd:/downloads-amd
+    depends_on:
+      - lidarr
+    image: randomninjaatk/amd:latest
 
   # readarr - eBooks
   # Docs: https://hotio.dev/containers/readarr/
