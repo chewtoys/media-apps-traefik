@@ -1247,6 +1247,8 @@ services:
       - sabnzbd
       - deluge
       - qbittorrent
+    links:
+      - amd
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
