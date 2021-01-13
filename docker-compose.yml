@@ -1240,7 +1240,7 @@ services:
       - ${DOCKER_DIR}/lidarr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
-      - ${DOWNLOAD_DIR}/ama/amd:/downloads-amd
+      - ${DOWNLOAD_DIR}/ama:/downloads-amd
     depends_on:
       - nzbhydra2
       - nzbget
@@ -1313,7 +1313,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/amd:/config
-      - ${DOWNLOAD_DIR}/ama/amd:/downloads-amd
+      - ${DOWNLOAD_DIR}/ama:/downloads-amd
     depends_on:
       - lidarr
     image: randomninjaatk/amd:latest
