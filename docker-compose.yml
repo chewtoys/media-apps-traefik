@@ -1318,6 +1318,43 @@ services:
       - lidarr
     image: randomninjaatk/amd:latest
 
+  # amvd - is a Lidarr companion script to automatically download music videos
+  # Docs: https://github.com/RandomNinjaAtk/docker-amvd
+  amvd:
+    container_name: amvd
+    hostname: amvd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - AUTOSTART=true
+      - SCRIPTINTERVAL=15m
+      - replaygain=true
+      - FolderPermissions=755
+      - FilePermissions=664
+      - MBRATELIMIT=1
+      - LidarrUrl=http://lidarr:8686/lidarr
+      - LidarrAPIkey=${LIDARR_API_KEY}
+      - SOURCE_CONNECTION=lidarr
+      - CountryCode=us
+      - RequireVideoMatch=true
+      - subtitlelanguage=en
+      - videofilter="live"
+      - WriteNFOs=true
+      - USEFOLDERS=true
+      - USEVIDEOFOLDERS=true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/amvd:/config
+      - ${MEDIA_DIR}/Music-Videos:/downloads-amvd
+    depends_on:
+      - lidarr
+    image: randomninjaatk/amvd:latest
+
   # readarr - eBooks
   # Docs: https://hotio.dev/containers/readarr/
   readarr:
