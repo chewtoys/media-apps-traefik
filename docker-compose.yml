@@ -28,18 +28,6 @@ services:
       # ------------------------------------------------------------------------
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
-      # ------------------------------------------------------------------------
-      # If AWS Route53 is required, comment above and uncomment below
-      # make sure the environment variables are set.
-      # ------------------------------------------------------------------------
-      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      # - AWS_HOSTED_ZONE_ID=${AWS_HOSTED_ZONE_ID}
-      # - AWS_TTL=${AWS_TTL}
-      # ------------------------------------------------------------------------
-      # For a full list of supported providers and parameters visit:
-      # https://doc.traefik.io/traefik/https/acme/#providers
-      # ------------------------------------------------------------------------
     command: # CLI arguments
       - --global.checkNewVersion=true
       - --global.sendAnonymousUsage=true
@@ -51,17 +39,12 @@ services:
       # ------------------------------------------------------------------------
       - --entryPoints.traefik.address=:8080
       - --api=true
-      # ------------------------------------------------------------------------
-      # uncomment below to access dashboard at localhost:8080/dashboard/ for testing only
-      # - --api.insecure=true
-      # ------------------------------------------------------------------------
       - --serversTransport.insecureSkipVerify=true
       - --log=true
       # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
       - --log.level=ERROR
       - --accessLog=true
       - --accessLog.filePath=/config/traefik.log
-      # Configuring a buffer of 100 lines
       - --accessLog.bufferingSize=100
       - --accessLog.filters.statusCodes=400-499
       - --providers.docker=true
@@ -70,20 +53,15 @@ services:
       - --providers.docker.exposedByDefault=false
       - --providers.docker.network=media-apps-traefik_apps
       - --providers.docker.swarmMode=false
-      # Load dynamic configuration from one or more .toml or .yml files in a directory.
-      - --providers.file.directory=/config/rules
-      # ------------------------------------------------------------------------
-      # Load dynamic configuration from a file.
-      #      - --providers.file.filename=/path/to/file
-      # Only works on top level files in the rules folder
       - --providers.file.watch=true
+      - --providers.file.directory=/config/rules
       # ------------------------------------------------------------------------
       # LetsEncrypt Staging Server - uncomment when testing
       # - --certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
       # ------------------------------------------------------------------------
       - --certificatesResolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesResolvers.letsencrypt.acme.storage=/config/acme.json
-      - --certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=${DNS_PLUGIN}
+      - --certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=${DNS_PROVIDER}
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
       # ------------------------------------------------------------------------
       # must use manual resolvers when using docker-compose otherwise validation fails
@@ -92,16 +70,11 @@ services:
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
-      # HTTP-to-HTTPS Redirect
-      # (comment out next 4 lines if you don't want http to https redirection)
       - traefik.http.routers.http-catchall.entrypoints=http
       - traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.http-catchall.middlewares=redirect-to-https
       # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.traefik-rtr.entrypoints=http
-      # if not using SSL certs, comment 3 below lines and uncomment above
       - traefik.http.routers.traefik-rtr.tls=true
       - traefik.http.routers.traefik-rtr.entrypoints=https
       - traefik.http.routers.traefik-rtr.tls.certresolver=letsencrypt
@@ -109,13 +82,7 @@ services:
       - traefik.http.routers.traefik-rtr.rule=Host(`traefik.${DOMAIN_NAME}`)
       - traefik.http.routers.traefik-rtr.tls.domains[0].main=${DOMAIN_NAME}
       - traefik.http.routers.traefik-rtr.tls.domains[0].sans=*.${DOMAIN_NAME}
-      # ------------------------------------------------------------------------
-      # Services - API
       - traefik.http.routers.traefik-rtr.service=api@internal
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.traefik-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
       - traefik.http.routers.traefik-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     volumes:
@@ -147,10 +114,8 @@ services:
       # ------------------------------------------------------------------------
       # HTTP Routers
       - traefik.http.routers.organizr-rtr.entrypoints=https
-      - traefik.http.routers.organizr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.organizr-rtr.tls=true
       - traefik.http.routers.organizr-rtr.rule=Host(`organizr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/organizr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.organizr-svc.loadbalancer.server.port=80
       - traefik.http.routers.organizr-rtr.service=organizr-svc
       # ------------------------------------------------------------------------
@@ -239,11 +204,8 @@ services:
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.authelia-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.authelia-rtr.entrypoints=https
-      - traefik.http.routers.authelia-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.authelia-rtr.tls=true
       # ------------------------------------------------------------------------
       - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`)
       # ------------------------------------------------------------------------
@@ -293,14 +255,9 @@ services:
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.sabnzbd-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.sabnzbd-rtr.entrypoints=https
-      - traefik.http.routers.sabnzbd-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.sabnzbd-rtr.tls=true
       - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
       - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
       # ------------------------------------------------------------------------
@@ -331,14 +288,9 @@ services:
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.nzbget-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.nzbget-rtr.entrypoints=https
-      - traefik.http.routers.nzbget-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.nzbget-rtr.tls=true
       - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
       - traefik.http.routers.nzbget-rtr.service=nzbget-svc
       # ------------------------------------------------------------------------
@@ -382,15 +334,9 @@ services:
       - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.qbittorrent-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.qbittorrent-rtr.entrypoints=https
-      - traefik.http.routers.qbittorrent-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.qbittorrent-rtr.tls=true
       - traefik.http.routers.qbittorrent-rtr.rule=Host(`qbittorrent.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=8080
       - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
       # ------------------------------------------------------------------------
@@ -420,15 +366,9 @@ services:
       - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.nzbhydra2-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.nzbhydra2-rtr.entrypoints=https
-      - traefik.http.routers.nzbhydra2-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.nzbhydra2-rtr.tls=true
       - traefik.http.routers.nzbhydra2-rtr.rule=Host(`nzbhydra2.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbhydra2`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.nzbhydra2-svc.loadbalancer.server.port=5076
       - traefik.http.routers.nzbhydra2-rtr.service=nzbhydra2-svc
       # ------------------------------------------------------------------------
@@ -458,14 +398,9 @@ services:
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.prowlarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.prowlarr-rtr.entrypoints=https
-      - traefik.http.routers.prowlarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.prowlarr-rtr.tls=true
       - traefik.http.routers.prowlarr-rtr.rule=Host(`prowlarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/prowlarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.prowlarr-svc.loadbalancer.server.port=5076
       - traefik.http.routers.prowlarr-rtr.service=prowlarr-svc
       # ------------------------------------------------------------------------
@@ -495,15 +430,9 @@ services:
       - ${DOCKER_DIR}/trackarr:/config
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.trackarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.trackarr-rtr.entrypoints=https
-      - traefik.http.routers.trackarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.trackarr-rtr.tls=true
       - traefik.http.routers.trackarr-rtr.rule=Host(`trackarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/trackarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.trackarr-svc.loadbalancer.server.port=7337
       - traefik.http.routers.trackarr-rtr.service=trackarr-svc
       # ------------------------------------------------------------------------
@@ -533,15 +462,9 @@ services:
       - ${DOCKER_DIR}/overseerr:/config
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.overseerr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.overseerr-rtr.entrypoints=https
-      - traefik.http.routers.overseerr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.overseerr-rtr.tls=true
       - traefik.http.routers.overseerr-rtr.rule=Host(`overseerr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/overseerr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.overseerr-svc.loadbalancer.server.port=7337
       - traefik.http.routers.overseerr-rtr.service=overseerr-svc
       # ------------------------------------------------------------------------
@@ -610,15 +533,9 @@ services:
       - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.plex-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.plex-rtr.entrypoints=https
-      - traefik.http.routers.plex-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.plex-rtr.tls=true
       - traefik.http.routers.plex-rtr.rule=Host(`plex.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/plex`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.plex-svc.loadbalancer.server.port=32400
       - traefik.http.routers.plex-rtr.service=plex-svc
       # ------------------------------------------------------------------------
@@ -649,15 +566,9 @@ services:
       - ${DOCKER_DIR}/tautulli:/config
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.tautulli-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.tautulli-rtr.entrypoints=https
-      - traefik.http.routers.tautulli-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.tautulli-rtr.tls=true
       - traefik.http.routers.tautulli-rtr.rule=Host(`tautulli.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.tautulli-svc.loadbalancer.server.port=8181
       - traefik.http.routers.tautulli-rtr.service=tautulli-svc
       # ------------------------------------------------------------------------
@@ -706,15 +617,9 @@ services:
       - ${DOCKER_DIR}/kitana:/app/data
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.tautulli-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.kitana-rtr.entrypoints=https
-      - traefik.http.routers.kitana-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.kitana-rtr.tls=true
       - traefik.http.routers.kitana-rtr.rule=(Host(`kitana.${DOMAIN_NAME}`) && PathPrefix(`/kitana`)) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/kitana`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.kitana-svc.loadbalancer.server.port=31337
       - traefik.http.routers.kitana-rtr.service=kitana-svc
       # ------------------------------------------------------------------------
@@ -746,15 +651,9 @@ services:
       - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.bazarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.bazarr-rtr.entrypoints=https
-      - traefik.http.routers.bazarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.bazarr-rtr.tls=true
       - traefik.http.routers.bazarr-rtr.rule=Host(`bazarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.bazarr-svc.loadbalancer.server.port=6767
       - traefik.http.routers.bazarr-rtr.service=bazarr-svc
       # ------------------------------------------------------------------------
@@ -786,15 +685,9 @@ services:
       - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.bazarr-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.bazarr-4k-rtr.entrypoints=https
-      - traefik.http.routers.bazarr-4k-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.bazarr-4k-rtr.tls=true
       - traefik.http.routers.bazarr-4k-rtr.rule=Host(`bazarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr-4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.bazarr-4k-svc.loadbalancer.server.port=6767
       - traefik.http.routers.bazarr-4k-rtr.service=bazarr-4k-svc
       # ------------------------------------------------------------------------
@@ -829,15 +722,9 @@ services:
       - qbittorrent
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.sonarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.sonarr-rtr.entrypoints=https
-      - traefik.http.routers.sonarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.sonarr-rtr.tls=true
       - traefik.http.routers.sonarr-rtr.rule=Host(`sonarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.sonarr-svc.loadbalancer.server.port=8989
       - traefik.http.routers.sonarr-rtr.service=sonarr-svc
       # ------------------------------------------------------------------------
@@ -872,15 +759,9 @@ services:
       - qbittorrent
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.sonarr-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.sonarr-4k-rtr.entrypoints=https
-      - traefik.http.routers.sonarr-4k-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.sonarr-4k-rtr.tls=true
       - traefik.http.routers.sonarr-4k-rtr.rule=Host(`sonarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr-4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.sonarr-4k-svc.loadbalancer.server.port=8989
       - traefik.http.routers.sonarr-4k-rtr.service=sonarr-4k-svc
       # ------------------------------------------------------------------------
@@ -915,15 +796,9 @@ services:
       - qbittorrent
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.radarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.radarr-rtr.entrypoints=https
-      - traefik.http.routers.radarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.radarr-rtr.tls=true
       - traefik.http.routers.radarr-rtr.rule=Host(`radarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.radarr-svc.loadbalancer.server.port=7878
       - traefik.http.routers.radarr-rtr.service=radarr-svc
       # ------------------------------------------------------------------------
@@ -958,15 +833,9 @@ services:
       - qbittorrent
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.radarr-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.radarr-4k-rtr.entrypoints=https
-      - traefik.http.routers.radarr-4k-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.radarr-4k-rtr.tls=true
       - traefik.http.routers.radarr-4k-rtr.rule=Host(`radarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.radarr-4k-svc.loadbalancer.server.port=7878
       - traefik.http.routers.radarr-4k-rtr.service=radarr-4k-svc
       # ------------------------------------------------------------------------
@@ -1005,15 +874,9 @@ services:
       - amd
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.lidarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.lidarr-rtr.entrypoints=https
-      - traefik.http.routers.lidarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.lidarr-rtr.tls=true
       - traefik.http.routers.lidarr-rtr.rule=Host(`lidarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/lidarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.lidarr-svc.loadbalancer.server.port=8686
       - traefik.http.routers.lidarr-rtr.service=lidarr-svc
       # ------------------------------------------------------------------------
@@ -1149,15 +1012,9 @@ services:
       - qbittorrent
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.bazarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.readarr-rtr.entrypoints=https
-      - traefik.http.routers.readarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.readarr-rtr.tls=true
       - traefik.http.routers.readarr-rtr.rule=Host(`readarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.readarr-svc.loadbalancer.server.port=8787
       - traefik.http.routers.readarr-rtr.service=readarr-svc
       # ------------------------------------------------------------------------
@@ -1192,15 +1049,9 @@ services:
       - sabnzbd
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.bazarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.readarr-ab-rtr.entrypoints=https
-      - traefik.http.routers.readarr-ab-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.readarr-rtr.tls=true
       - traefik.http.routers.readarr-ab-rtr.rule=Host(`readarr-ab.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr-ab`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.readarr-ab-svc.loadbalancer.server.port=8787
       - traefik.http.routers.readarr-ab-rtr.service=readarr-ab-svc
       # ------------------------------------------------------------------------
@@ -1237,15 +1088,9 @@ services:
       - qbittorrent
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.bazarr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.mylar3-rtr.entrypoints=https
-      - traefik.http.routers.mylar3-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.mylar3-rtr.tls=true
       - traefik.http.routers.mylar3-rtr.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.mylar3-svc.loadbalancer.server.port=8090
       - traefik.http.routers.mylar3-rtr.service=mylar3-svc
       # ------------------------------------------------------------------------
@@ -1277,15 +1122,9 @@ services:
       - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.calibre-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.calibre-rtr.entrypoints=https
-      - traefik.http.routers.calibre-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.calibre-rtr.tls=true
       - traefik.http.routers.calibre-rtr.rule=Host(`calibre.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.calibre-svc.loadbalancer.server.port=8080
       - traefik.http.routers.calibre-rtr.service=calibre-svc
       # ------------------------------------------------------------------------
@@ -1316,15 +1155,9 @@ services:
       - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.calibre-web-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.calibre-web-rtr.entrypoints=https
-      - traefik.http.routers.calibre-web-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.calibre-web-rtr.tls=true
       - traefik.http.routers.calibre-web-rtr.rule=Host(`calibre-web.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre-web`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.calibre-web-svc.loadbalancer.server.port=8083
       - traefik.http.routers.calibre-web-rtr.service=calibre-web-svc
       # ------------------------------------------------------------------------
@@ -1352,15 +1185,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.whoami-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.whoami-rtr.entrypoints=https
-      - traefik.http.routers.whoami-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.whoami-rtr.tls=true
       - traefik.http.routers.whoami-rtr.rule=Host(`whoami.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whoami`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
       - traefik.http.services.whoami-svc.loadbalancer.server.port=80
       - traefik.http.routers.whoami-rtr.service=whoami-svc
       # ------------------------------------------------------------------------
