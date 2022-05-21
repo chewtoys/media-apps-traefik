@@ -114,55 +114,15 @@ services:
       - traefik.http.routers.traefik-rtr.service=api@internal
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.traefik-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.traefik-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.traefik-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.traefik-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DOCKER_DIR}/traefik:/config
     image: traefik:latest
-
-  # portainer - container management frontend
-  # - view logs
-  # - restart containers
-  # - connect to container shell (if available)
-  # - see configuration
-  portainer:
-    container_name: portainer
-    hostname: portainer
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${DOCKER_DIR}/portainer:/data
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.portainer-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.portainer-rtr.entrypoints=https
-      - traefik.http.routers.portainer-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.portainer-rtr.rule=Host(`portainer.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.portainer-svc.loadbalancer.server.port=9000
-      - traefik.http.routers.portainer-rtr.service=portainer-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.portainer-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.portainer-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: portainer/portainer-ce:latest
 
   # organizr - WebApp portal for bookmarks, prevents multiple tabs
   # mostly used for sonarr and the like
@@ -186,20 +146,18 @@ services:
       - traefik.enable=true
       # ------------------------------------------------------------------------
       # HTTP Routers
-      # - traefik.http.routers.organizr-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.organizr-rtr.entrypoints=https
       - traefik.http.routers.organizr-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.organizr-rtr.rule=Host(`organizr.${DOMAIN_NAME}`)
+      - traefik.http.routers.organizr-rtr.rule=Host(`organizr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/organizr`))
       # ------------------------------------------------------------------------
       # HTTP Services
       - traefik.http.services.organizr-svc.loadbalancer.server.port=80
       - traefik.http.routers.organizr-rtr.service=organizr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.organizr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.organizr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.organizr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.organizr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/organizr/organizr:latest
 
@@ -310,7 +268,7 @@ services:
     depends_on:
       - authredis
       - authmariadb
-    image: authelia/authelia:4.23
+    image: authelia/authelia:latest
 
   #-----------------------------------------------------------------------------
   # DOWNLOADS
@@ -347,9 +305,9 @@ services:
       - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.sabnzbd-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.sabnzbd-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.sabnzbd-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.sabnzbd-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sabnzbd:latest
 
@@ -385,9 +343,9 @@ services:
       - traefik.http.routers.nzbget-rtr.service=nzbget-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.nzbget-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.nzbget-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.nzbget-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.nzbget-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/nzbget:latest
 
@@ -399,9 +357,11 @@ services:
     container_name: qbittorrent
     hostname: qbittorrent
     restart: unless-stopped
-    privileged: true
+    cap_add:
+      - NET_ADMIN
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=1
     networks:
       apps: {}
     environment:
@@ -409,19 +369,13 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      # change below subnet to whatever you configure your docker network to
-      - LAN_NETWORK=172.22.0.0/24
-      - WEBUI_PORT=8080
-      - VPN_ENABLED=yes
-      - VPN_PROV=${VPN_PROV}
-      # options below are openvpn or wireguard (I like wireguard)
-      - VPN_CLIENT=wireguard
-      - STRICT_PORT_FORWARD=yes
-      - ENABLE_PRIVOXY=no
-      - DEBUG=no
-      - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
-      - VPN_USER=${PIA_USERNAME}
-      - VPN_PASS=${PIA_PASSWORD}
+      - VPN_ENABLED=true
+      - VPN_LAN_NETWORK=172.20.0.0/20
+      - WEBUI_PORTS=8081/tcp
+      - VPN_CONF=wg0
+      - PRIVOXY_ENABLED=false
+      - FLOOD_AUTH=false
+      # - FLOOD_OPTION_BASEURI=/qflood
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
@@ -441,105 +395,11 @@ services:
       - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.qbittorrent-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: binhex/arch-qbittorrentvpn:latest
-
-  # deluge - torrent download client with VPN built in
-  # Docs: https://github.com/binhex/arch-delugevpn
-  # Read the documentaton on proper setup of either wireguard or openvpn
-  # This template is setup for wireguard
-  deluge:
-    container_name: deluge
-    hostname: deluge
-    restart: unless-stopped
-    privileged: true
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      # change below subnet to whatever you configure your docker network to
-      - LAN_NETWORK=172.22.0.0/24
-      - VPN_ENABLED=yes
-      - VPN_PROV=${VPN_PROV}
-      # options below are openvpn or wireguard (I like wireguard)
-      - VPN_CLIENT=wireguard
-      - STRICT_PORT_FORWARD=yes
-      - ENABLE_PRIVOXY=no
-      - DEBUG=no
-      - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177
-      - VPN_USER=${PIA_USERNAME}
-      - VPN_PASS=${PIA_PASSWORD}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/deluge:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.deluge-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.deluge-rtr.entrypoints=https
-      - traefik.http.routers.deluge-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.deluge-rtr.rule=Host(`deluge.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.deluge-svc.loadbalancer.server.port=8112
-      - traefik.http.routers.deluge-rtr.service=deluge-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.deluge-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.deluge-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: binhex/arch-delugevpn:latest
-
-  # jackett - nzb torsnab proxy
-  # used to aggregate torrent indexers to use with nzbhydra, sonarr and others
-  # Docs: https://hotio.dev/containers/jackett/
-  jackett:
-    container_name: jackett
-    hostname: jackett
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/jackett:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.jackett-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.jackett-rtr.entrypoints=https
-      - traefik.http.routers.jackett-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.jackett-rtr.rule=Host(`jackett.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/jackett`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.jackett-svc.loadbalancer.server.port=9117
-      - traefik.http.routers.jackett-rtr.service=jackett-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.jackett-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.jackett-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/jackett:latest
+    image: ghcr.io/hotio/qbittorrent
 
   # nzbhydra2 - usenet and torsnab indexer proxy
   # Docs: https://hotio.dev/containers/nzbhydra2/
@@ -573,11 +433,48 @@ services:
       - traefik.http.routers.nzbhydra2-rtr.service=nzbhydra2-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/nzbhydra2:testing
+
+  # prowlarr - usenet and torsnab indexer proxy
+  # Docs: hhttps://hotio.dev/containers/prowlarr/
+  prowlarr:
+    container_name: prowlarr
+    hostname: prowlarr
+    restart: unless-stopped
+    networks:
+      network_apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/prowlarr:/config
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.prowlarr-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.prowlarr-rtr.entrypoints=https
+      - traefik.http.routers.prowlarr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.prowlarr-rtr.rule=Host(`prowlarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/prowlarr`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.prowlarr-svc.loadbalancer.server.port=5076
+      - traefik.http.routers.prowlarr-rtr.service=prowlarr-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      # - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/prowlarr:nightly
 
   # trackarr - Tracker announcements to Sonarr/Radarr/Lidarr.
   # Docs: https://hotio.dev/containers/trackarr/
@@ -611,20 +508,20 @@ services:
       - traefik.http.routers.trackarr-rtr.service=trackarr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.trackarr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.trackarr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.trackarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.trackarr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/trackarr:nightly
 
-  # requestrr a chatbot used to simplify using services like Sonarr/Radarr/Ombi via the use of chat!
-  # Docs: https://hotio.dev/containers/requestrr/
-  requestrr:
-    container_name: requestrr
-    hostname: requestrr
+  # overseerr a chatbot used to simplify using services like Sonarr/Radarr/Ombi via the use of chat!
+  # Docs: https://hotio.dev/containers/overseerr/
+  overseerr:
+    container_name: overseerr
+    hostname: overseerr
     restart: unless-stopped
     networks:
-      apps: {}
+      network_apps: {}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -633,65 +530,27 @@ services:
       - DEBUG=no
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/requestrr:/config
+      - ${DOCKER_DIR}/overseerr:/config
     labels:
       - traefik.enable=true
       # ------------------------------------------------------------------------
       # HTTP Routers
-      # - traefik.http.routers.requestrr-rtr.entrypoints=http
+      # - traefik.http.routers.overseerr-rtr.entrypoints=http
       # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.requestrr-rtr.entrypoints=https
-      - traefik.http.routers.requestrr-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.requestrr-rtr.rule=Host(`requestrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/requestrr`))
+      - traefik.http.routers.overseerr-rtr.entrypoints=https
+      - traefik.http.routers.overseerr-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.overseerr-rtr.rule=Host(`overseerr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/overseerr`))
       # ------------------------------------------------------------------------
       # HTTP Services
-      - traefik.http.services.requestrr-svc.loadbalancer.server.port=4545
-      - traefik.http.routers.requestrr-rtr.service=requestrr-svc
+      - traefik.http.services.overseerr-svc.loadbalancer.server.port=7337
+      - traefik.http.routers.overseerr-rtr.service=overseerr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.requestrr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.overseerr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.requestrr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.overseerr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/requestrr:latest
-
-  # requestrr a chatbot used to simplify using services like Sonarr/Radarr/Ombi via the use of chat!
-  # Docs: https://hotio.dev/containers/requestrr/
-  requestrr-4k:
-    container_name: requestrr-4k
-    hostname: requestrr-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DEBUG=no
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/requestrr-4k:/config
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.requestrr-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.requestrr-4k-rtr.entrypoints=https
-      - traefik.http.routers.requestrr-4k-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.requestrr-4k-rtr.rule=Host(`requestrr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/requestrr4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.requestrr-4k-svc.loadbalancer.server.port=4545
-      - traefik.http.routers.requestrr-4k-rtr.service=requestrr-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.requestrr-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.requestrr-4k-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/requestrr:latest
+    image: ghcr.io/hotio/overseerr:nightly
 
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
   # downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
@@ -736,7 +595,14 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_PASS=yes
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      #-------------------------------------------------------------------------
+      # If you have an nvidia GPU
+      #-------------------------------------------------------------------------
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      #-------------------------------------------------------------------------
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
@@ -750,7 +616,7 @@ services:
       # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.plex-rtr.entrypoints=https
       - traefik.http.routers.plex-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.plex-rtr.rule=Host(`plex.${DOMAIN_NAME}`)
+      - traefik.http.routers.plex-rtr.rule=Host(`plex.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/plex`))
       # ------------------------------------------------------------------------
       # HTTP Services
       - traefik.http.services.plex-svc.loadbalancer.server.port=32400
@@ -760,50 +626,6 @@ services:
       - traefik.http.routers.plex-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
       # - traefik.http.routers.plex-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/plex:release
-
-  # plex - media server
-  # Docs: https://hotio.dev/containers/plex/
-  plex-4k:
-    container_name: plex-4k
-    hostname: plex-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    ports:
-      - 32401:32400/tcp
-    environment:
-      - TZ=${TZ}
-      - PLEX_UID=${PUID}
-      - PLEX_GID=${PGID}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - PLEX_CLAIM=${PLEX_4K_CLAIM}
-      - ADVERTISE_IP=${PLEX_4K_ADVERTISE_IP}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/plex-4k:/config
-      - ${DOCKER_DIR}/plex-4k-transcode:/transcode
-      - ${DATA_DIR}:/data
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.plex-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.plex-4k-rtr.entrypoints=https
-      - traefik.http.routers.plex-4k-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.plex-4k-rtr.rule=Host(`plex-4k.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.plex-4k-svc.loadbalancer.server.port=32400
-      - traefik.http.routers.plex-4k-rtr.service=plex-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.plex-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.plex-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/plex:release
 
@@ -840,48 +662,9 @@ services:
       - traefik.http.routers.tautulli-rtr.service=tautulli-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.tautulli-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.tautulli-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.tautulli-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/tautulli:latest
-
-  # tautulli - plex monitor
-  # Docs: https://hotio.dev/containers/tautulli/
-  tautulli-4k:
-    container_name: tautulli-4k
-    hostname: tautulli-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - UMASK=022
-    links:
-      - plex-4k
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/tautulli-4k:/config
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.tautulli-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.tautulli-4k-rtr.entrypoints=https
-      - traefik.http.routers.tautulli-4k-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.tautulli-4k-rtr.rule=Host(`tautulli-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli-4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.tautulli-4k-svc.loadbalancer.server.port=8181
-      - traefik.http.routers.tautulli-4k-rtr.service=tautulli-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.tautulli-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.tautulli-4k-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.tautulli-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/tautulli:latest
 
@@ -902,26 +685,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/autoscan:/config
-      - ${DATA_DIR}:/data
-    image: ghcr.io/hotio/autoscan:nightly
-
-  # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
-  # Docs: https://github.com/Cloudbox/autoscan
-  autoscan-4k:
-    container_name: autoscan-4k
-    hostname: autoscan-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - UMASK=022
-      - DEBUG=yes
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/autoscan-4k:/config
       - ${DATA_DIR}:/data
     image: ghcr.io/hotio/autoscan:nightly
 
@@ -956,9 +719,9 @@ services:
       - traefik.http.routers.kitana-rtr.service=kitana-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.kitana-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.kitana-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.kitana-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.kitana-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: pannal/kitana:latest
 
@@ -996,9 +759,9 @@ services:
       - traefik.http.routers.bazarr-rtr.service=bazarr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.bazarr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.bazarr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.bazarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.bazarr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/bazarr:nightly
 
@@ -1059,12 +822,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr:/config
       - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     labels:
       - traefik.enable=true
@@ -1081,9 +842,9 @@ services:
       - traefik.http.routers.sonarr-rtr.service=sonarr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.sonarr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.sonarr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.sonarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.sonarr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sonarr:nightly
 
@@ -1103,13 +864,11 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr-4k:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
       - ${DATA_DIR}:/data
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     labels:
       - traefik.enable=true
@@ -1126,9 +885,9 @@ services:
       - traefik.http.routers.sonarr-4k-rtr.service=sonarr-4k-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.sonarr-4k-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.sonarr-4k-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.sonarr-4k-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.sonarr-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sonarr:nightly
 
@@ -1149,12 +908,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
       - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     labels:
       - traefik.enable=true
@@ -1171,9 +928,9 @@ services:
       - traefik.http.routers.radarr-rtr.service=radarr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.radarr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.radarr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.radarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.radarr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/radarr:nightly
 
@@ -1194,12 +951,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k:/config
       - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     labels:
       - traefik.enable=true
@@ -1216,9 +971,9 @@ services:
       - traefik.http.routers.radarr-4k-rtr.service=radarr-4k-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.radarr-4k-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.radarr-4k-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.radarr-4k-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.radarr-4k-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/radarr:nightly
 
@@ -1238,14 +993,13 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/lidarr:/config
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
       - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
-      - ${DOWNLOAD_DIR}/ama:/downloads-amd
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     links:
       - amd
@@ -1264,9 +1018,9 @@ services:
       - traefik.http.routers.lidarr-rtr.service=lidarr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.lidarr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.lidarr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.lidarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.lidarr-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/lidarr:nightly
 
@@ -1277,7 +1031,7 @@ services:
     hostname: amd
     restart: unless-stopped
     networks:
-      apps: {}
+      network_apps: {}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -1287,16 +1041,16 @@ services:
       - SCRIPTINTERVAL=1h
       - DOWNLOADMODE=wanted
       - FALLBACKSEARCH=True
-      - LIST=both
+      - LIST=missing
       - SearchType=both
-      - Concurrency=2
+      - Concurrency=1
       - EMBEDDED_COVER_QUALITY=80
       - FORMAT=FLAC
       - BITRATE=320
       - ENABLEPOSTPROCESSING=true
       - FORCECONVERT=false
-      - requirequality=false
-      - MatchDistance=7
+      - requirequality=true
+      - MatchDistance=10
       - replaygain=true
       - FolderPermissions=755
       - FilePermissions=664
@@ -1309,14 +1063,66 @@ services:
       - PLEXLIBRARYNAME=Music
       - PLEXURL=http://plex:32400
       - PLEXTOKEN=${PLEX_TOKEN}
-      - POSTPROCESSTHREADS=2
+      - POSTPROCESSTHREADS=4
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/amd:/config
       - ${DOWNLOAD_DIR}/ama:/downloads-amd
-    depends_on:
-      - lidarr
     image: randomninjaatk/amd:latest
+
+  # amvd - is a Lidarr companion script to automatically download music videos
+  # Docs: https://github.com/RandomNinjaAtk/docker-amvd
+  amvd:
+    container_name: amvd
+    hostname: amvd
+    restart: unless-stopped
+    networks:
+      network_apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - AUTOSTART=true
+      - SCRIPTINTERVAL=1h
+      - replaygain=true
+      - FolderPermissions=755
+      - FilePermissions=664
+      - MBRATELIMIT=1
+      - LidarrUrl=http://lidarr:8686/lidarr
+      - LidarrAPIkey=${LIDARR_API_KEY}
+      - SOURCE_CONNECTION=lidarr
+      - CountryCode=us
+      - RequireVideoMatch=true
+      - subtitlelanguage=en
+      - videofilter="live"
+      - WriteNFOs=true
+      - USEFOLDERS=true
+      - USEVIDEOFOLDERS=true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/amvd:/config
+      - ${MEDIA_DIR}/Music-Videos:/downloads-amvd
+    image: randomninjaatk/amvd:latest
+
+  # beets - Music tagger
+  # Docs: https://hub.docker.com/r/linuxserver/beets
+  beets:
+    container_name: beets
+    hostname: beets
+    restart: unless-stopped
+    networks:
+      network_apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/beets:/config
+      - ${DATA_DIR}:/data
+    image: ghcr.io/linuxserver/beets:nightly
 
   # readarr - eBooks
   # Docs: https://hotio.dev/containers/readarr/
@@ -1336,12 +1142,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/readarr:/config
       - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     labels:
       - traefik.enable=true
@@ -1358,9 +1162,52 @@ services:
       - traefik.http.routers.readarr-rtr.service=readarr-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.readarr-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.readarr-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.readarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.readarr-rtr.middlewares=chain-no-auth@file
+      # ------------------------------------------------------------------------
+    image: ghcr.io/hotio/readarr:nightly
+
+  # readarr - eBooks
+  # Docs: https://hotio.dev/containers/readarr/
+  # This version for audiobooks
+  readarr-ab:
+    container_name: readarr-ab
+    hostname: readarr-ab
+    restart: unless-stopped
+    networks:
+      network_apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/readarr-ab:/config
+      - ${DATA_DIR}:/data
+      - ${DOWNLOAD_DIR}:/data/downloads
+    depends_on:
+      - nzbhydra2
+      - sabnzbd
+    labels:
+      - traefik.enable=true
+      # ------------------------------------------------------------------------
+      # HTTP Routers
+      # - traefik.http.routers.bazarr-rtr.entrypoints=http
+      # if not using SSL certs, comment the 2 below lines and uncomment above
+      - traefik.http.routers.readarr-ab-rtr.entrypoints=https
+      - traefik.http.routers.readarr-ab-rtr.tls.certresolver=letsencrypt
+      - traefik.http.routers.readarr-ab-rtr.rule=Host(`readarr-ab.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr-ab`))
+      # ------------------------------------------------------------------------
+      # HTTP Services
+      - traefik.http.services.readarr-ab-svc.loadbalancer.server.port=8787
+      - traefik.http.routers.readarr-ab-rtr.service=readarr-ab-svc
+      # ------------------------------------------------------------------------
+      # Middlewares
+      # - traefik.http.routers.readarr-ab-rtr.middlewares=chain-authelia@file
+      # uncomment below and comment above if you don't wish to use oauth and mfa
+      - traefik.http.routers.readarr-ab-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/readarr:nightly
 
@@ -1383,12 +1230,10 @@ services:
       # TEMP DIR for DDL Downloads
       - ${DOCKER_DIR}/mylar3/downloads:/downloads
       - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
     depends_on:
       - nzbhydra2
       - nzbget
       - sabnzbd
-      - deluge
       - qbittorrent
     labels:
       - traefik.enable=true
@@ -1405,126 +1250,11 @@ services:
       - traefik.http.routers.mylar3-rtr.service=mylar3-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.mylar3-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.mylar3-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.mylar3-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.mylar3-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/mylar3:nightly
-
-  # lazylib - eBooks and Audiobooks
-  # Docs: https://hub.docker.com/r/linuxserver/lazylibrarian
-  lazylib:
-    container_name: lazylib
-    hostname: lazylib
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DEBUG=no
-      - DOCKER_MODS=ghcr.io/linuxserver/calibre-web:calibre|ghcr.io/linuxserver/mods:lazylibrarian-ffmpeg
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/lazylib:/config
-      - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.lazylib-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.lazylib-rtr.entrypoints=https
-      - traefik.http.routers.lazylib-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.lazylib-rtr.rule=Host(`lazylib.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/lazylib`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.lazylib-svc.loadbalancer.server.port=5299
-      - traefik.http.routers.lazylib-rtr.service=lazylib-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.lazylib-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.lazylib-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/lazylibrarian:latest
-
-  # ombi - sonarr, radarr, lidarr middleware (request tv, movies, music)
-  # Docs: https://hotio.dev/containers/ombi/
-  ombi:
-    container_name: ombi
-    hostname: ombi
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/ombi:/config
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.ombi-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.ombi-rtr.entrypoints=https
-      - traefik.http.routers.ombi-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.ombi-rtr.rule=Host(`ombi.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/ombi`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.ombi-svc.loadbalancer.server.port=5000
-      - traefik.http.routers.ombi-rtr.service=ombi-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.ombi-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.ombi-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/ombi:testing
-
-  # ombi - sonarr, radarr, lidarr middleware (request tv, movies, music)
-  # Docs: https://hotio.dev/containers/ombi/
-  ombi-4k:
-    container_name: ombi-4k
-    hostname: ombi-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/ombi-4k:/config
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
-      # - traefik.http.routers.ombi-4k-rtr.entrypoints=http
-      # if not using SSL certs, comment the 2 below lines and uncomment above
-      - traefik.http.routers.ombi-4k-rtr.entrypoints=https
-      - traefik.http.routers.ombi-4k-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.ombi-4k-rtr.rule=Host(`ombi-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/ombi-4k`))
-      # ------------------------------------------------------------------------
-      # HTTP Services
-      - traefik.http.services.ombi-4k-svc.loadbalancer.server.port=5000
-      - traefik.http.routers.ombi-4k-rtr.service=ombi-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.ombi-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.ombi-4k-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/ombi:testing
 
   # calibre - ebook management database
   # docs: https://hub.docker.com/r/linuxserver/calibre
@@ -1553,16 +1283,16 @@ services:
       # if not using SSL certs, comment the 2 below lines and uncomment above
       - traefik.http.routers.calibre-rtr.entrypoints=https
       - traefik.http.routers.calibre-rtr.tls.certresolver=letsencrypt
-      - traefik.http.routers.calibre-rtr.rule=Host(`calibre.${DOMAIN_NAME}`)
+      - traefik.http.routers.calibre-rtr.rule=Host(`calibre.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre`))
       # ------------------------------------------------------------------------
       # HTTP Services
       - traefik.http.services.calibre-svc.loadbalancer.server.port=8080
       - traefik.http.routers.calibre-rtr.service=calibre-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.calibre-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.calibre-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.calibre-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.calibre-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/linuxserver/calibre:latest
 
@@ -1599,9 +1329,9 @@ services:
       - traefik.http.routers.calibre-web-rtr.service=calibre-web-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.calibre-web-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.calibre-web-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.calibre-web-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.calibre-web-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: ghcr.io/linuxserver/calibre-web:latest
 
@@ -1635,9 +1365,9 @@ services:
       - traefik.http.routers.whoami-rtr.service=whoami-svc
       # ------------------------------------------------------------------------
       # Middlewares
-      - traefik.http.routers.whoami-rtr.middlewares=chain-authelia@file
+      # - traefik.http.routers.whoami-rtr.middlewares=chain-authelia@file
       # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.whoami-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.whoami-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
     image: traefik/whoami
 
@@ -1646,38 +1376,38 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.22.0.0/24
+        - subnet: 172.20.0.0/20
 
 secrets:
   acme_email:
-    file: ${SECRETS_DIR}/acme_email
+    file: ${DOCKER_DIR}/secrets/acme_email
   calibre_user:
-    file: ${SECRETS_DIR}/calibre_user
+    file: ${DOCKER_DIR}/secrets/calibre_user
   calibre_pass:
-    file: ${SECRETS_DIR}/calibre_pass
+    file: ${DOCKER_DIR}/secrets/calibre_pass
   jwt:
-    file: ${SECRETS_DIR}/jwt
+    file: ${DOCKER_DIR}/secrets/jwt
   session:
-    file: ${SECRETS_DIR}/session
+    file: ${DOCKER_DIR}/secrets/session
   mysql:
-    file: ${SECRETS_DIR}/mysql
+    file: ${DOCKER_DIR}/secrets/mysql
   mysql_root:
-    file: ${SECRETS_DIR}/mysql_root
+    file: ${DOCKER_DIR}/secrets/mysql_root
   smtp:
-    file: ${SECRETS_DIR}/smtp
+    file: ${DOCKER_DIR}/secrets/smtp
   duo:
-    file: ${SECRETS_DIR}/duo
+    file: ${DOCKER_DIR}/secrets/duo
   plex_claim:
-    file: ${SECRETS_DIR}/plex_claim
+    file: ${DOCKER_DIR}/secrets/plex_claim
   plex_4k_claim:
-    file: ${SECRETS_DIR}/plex_4k_claim
+    file: ${DOCKER_DIR}/secrets/plex_4k_claim
   redis:
-    file: ${SECRETS_DIR}/redis
+    file: ${DOCKER_DIR}/secrets/redis
   postgress:
-    file: ${SECRETS_DIR}/postgress
+    file: ${DOCKER_DIR}/secrets/postgress
   ldap:
-    file: ${SECRETS_DIR}/ldap
+    file: ${DOCKER_DIR}/secrets/ldap
   authmariadb_root_password:
-    file: ${SECRETS_DIR}/authmariadb_root_password
+    file: ${DOCKER_DIR}/secrets/authmariadb_root_password
   maxminddb:
-    file: ${SECRETS_DIR}/maxminddb
+    file: ${DOCKER_DIR}/secrets/maxminddb
