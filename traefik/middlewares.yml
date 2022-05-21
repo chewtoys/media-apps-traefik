@@ -26,15 +26,15 @@ http:
         stsPreload: true
         forceSTSHeader: true
         # frameDeny: true #overwritten by customFrameOptionsValue
-        customFrameOptionsValue: 'allow-from https:YOURDOMAIN.COM' #CSP takes care of this but may be needed for organizr.
+        customFrameOptionsValue: 'allow-from https:${DOMAIN_NAME}' #CSP takes care of this but may be needed for organizr.
         contentTypeNosniff: true
         browserXssFilter: true
         # sslForceHost: true # add sslHost to all of the services
-        # sslHost: "YOURDOMAIN.COM"
+        # sslHost: "${DOMAIN_NAME}"
         referrerPolicy: 'same-origin'
         # Setting contentSecurityPolicy is more secure but it can break things. Proper auth will reduce the risk.
         # the below line also breaks some apps due to 'none' - sonarr, radarr, etc.
-        # contentSecurityPolicy: "frame-ancestors '*.YOURDOMAIN.COM:*';object-src 'none';script-src 'none';"
+        # contentSecurityPolicy: "frame-ancestors '*.${DOMAIN_NAME}:*';object-src 'none';script-src 'none';"
         featurePolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
         customResponseHeaders:
           X-Robots-Tag: 'none,noarchive,nosnippet,notranslate,noimageindex,'
@@ -49,7 +49,7 @@ http:
 
     authelia:
       forwardAuth:
-        address: 'http://authelia:9091/api/verify?rd=https://authelia.YOURDOMAIN.COM/'
+        address: 'http://authelia:9091/api/verify?rd=https://authelia.${DOMAIN_NAME}/'
         trustForwardHeader: true
         authResponseHeaders:
           - 'Remote-User'

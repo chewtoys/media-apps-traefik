@@ -7,6 +7,7 @@ port: 9091
 log_level: warn
 log_file_path: /config/authelia.log
 
+#
 # Configuration options specific to the internal http server
 server:
   # Buffers usually should be configured to be the same value.
@@ -291,11 +292,14 @@ access_control:
     # MAIN DOMAIN SECTION
     # ----------------------------------------------------------------------------------------------
     - domain:
-        - 'authelia.YOURDOMAIN.COM'
-      policy: bypass
-    - domain:
         - 'YOURDOMAIN.COM'
-        - '*.YOURDOMAIN.COM'
+        - 'authelia.YOURDOMAIN.COM'
+      resources:
+        - '^(/authelia).*$'
+      policy: bypass
+    - domain: '*.YOURDOMAIN.COM'
+      policy: two_factor
+    - domain: 'YOURDOMAIN.COM'
       policy: two_factor
 
 session:
@@ -339,12 +343,12 @@ storage:
 
 notifier:
   smtp:
-    username: YOUR@EMAIL.COM
+    username: YOUR_EMAIL_SERVER_USER
     # This secret can also be set using the env variables AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
     # password: # use docker secret file instead AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
-    host: SMTP.SERVER.COM
-    port: SMTP-PORT
-    sender: YOUR-SENDER@EMAIL.COM
+    host: SMTP_SERVER
+    port: SMTP_SERVER_PORT
+    sender: YOUR_FROM_EMAIL_ADDRESS
 # For testing purpose, notifications can be sent in a file. Be sure map the volume in docker-compose.
 # filesystem:
 # filename: /tmp/authelia/notification.txt
