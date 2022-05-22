@@ -91,6 +91,28 @@ services:
       - ${DOCKER_DIR}/traefik:/config
     image: traefik:latest
 
+  cloudflareddns:
+    container_name: cloudflareddns
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - INTERVAL=300
+      - DETECTION_MODE=dig-whoami.cloudflare
+      - LOG_LEVEL=3
+      - cloudflareddns
+      - CF_USER=${CLOUDFLARE_EMAIL}
+      - CF_APIKEY=${CLOUDFLARE_API_KEY}
+      - CF_HOSTS=${DOMAIN_NAME}
+      - CF_ZONES=${DOMAIN_NAME}
+      - CF_RECORDTYPES=A;A
+    volumes:
+      - ${DOCKER_DIR}/cloudflareddns:/config
+    image: cr.hotio.dev/hotio/cloudflareddns
+
   # organizr - WebApp portal for bookmarks, prevents multiple tabs
   # mostly used for sonarr and the like
   # docs: https://hub.docker.com/r/organizr/organizr
