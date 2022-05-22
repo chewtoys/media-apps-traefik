@@ -83,8 +83,23 @@ services:
       - traefik.http.routers.traefik-rtr.tls.domains[0].main=${DOMAIN_NAME}
       - traefik.http.routers.traefik-rtr.tls.domains[0].sans=*.${DOMAIN_NAME}
       - traefik.http.routers.traefik-rtr.service=api@internal
-      - traefik.http.routers.traefik-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.traefik-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.traefik-rtr.middlewares=secure-headers@docker
       # ------------------------------------------------------------------------
+      - traefik.http.middlewares.rate-limit.rateLimit.average=100
+      - traefik.http.middlewares.rate-limit.rateLimit.burst=50
+      # ------------------------------------------------------------------------
+      - traefik.http.middlewares.secure-headers.headers.frameDeny=true
+      - traefik.http.middlewares.secure-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.secure-headers.headers.stsPreload=true
+      - traefik.http.middlewares.secure-headers.headers.stsSeconds=63072000
+      - traefik.http.middlewares.secure-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.secure-headers.headers.accessControlAllowMethods=GET, POST
+      - traefik.http.middlewares.secure-headers.headers.accessControlAllowOriginList=https://${DOMAIN_NAME}, https://www.${DOMAIN_NAME}
+      - traefik.http.middlewares.secure-headers.headers.accessControlMaxAge=100
+      - traefik.http.middlewares.secure-headers.headers.addVaryheader=true
+      - traefik.http.middlewares.secure-headers.headers.contentSecurityPolicy=script-src 'self'
+      - traefik.http.middlewares.secure-headers.headers.referrerPolicy=origin-when-cross-origin
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -133,18 +148,14 @@ services:
       - ${DOCKER_DIR}/organizr:/config
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      # HTTP Routers
       - traefik.http.routers.organizr-rtr.entrypoints=https
       - traefik.http.routers.organizr-rtr.tls=true
       - traefik.http.routers.organizr-rtr.rule=Host(`organizr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/organizr`))
       - traefik.http.services.organizr-svc.loadbalancer.server.port=80
       - traefik.http.routers.organizr-rtr.service=organizr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.organizr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.organizr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.organizr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.organizr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.organizr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/organizr/organizr:latest
 
@@ -229,16 +240,15 @@ services:
       - traefik.http.routers.authelia-rtr.entrypoints=https
       - traefik.http.routers.authelia-rtr.tls=true
       # ------------------------------------------------------------------------
-      - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`)
-      # ------------------------------------------------------------------------
-      # HTTP Services
+      - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/authelia`))
       - traefik.http.services.authelia-svc.loadbalancer.server.port=9091
       - traefik.http.routers.authelia-rtr.service=authelia-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.authelia-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.authelia-rtr.middlewares=chain-no-auth@file
+      - traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.${DOMAIN_NAME}/
+      - traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email
+      - traefik.http.middlewares.authelia-basic.forwardauth.address=http://authelia:9091/api/verify?auth=basic
+      - traefik.http.middlewares.authelia-basic.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia-basic.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email
       # ------------------------------------------------------------------------
     secrets:
       - jwt
@@ -276,17 +286,14 @@ services:
       - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
       - traefik.http.routers.sabnzbd-rtr.entrypoints=https
       - traefik.http.routers.sabnzbd-rtr.tls=true
       - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
       - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
       - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.sabnzbd-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.sabnzbd-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.sabnzbd-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.sabnzbd-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sabnzbd:latest
 
@@ -309,17 +316,14 @@ services:
       - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
       - traefik.http.routers.nzbget-rtr.entrypoints=https
       - traefik.http.routers.nzbget-rtr.tls=true
       - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
       - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
       - traefik.http.routers.nzbget-rtr.service=nzbget-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.nzbget-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.nzbget-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/nzbget:latest
 
@@ -327,9 +331,9 @@ services:
   # Docs: https://github.com/binhex/arch-qbittorrentvpn
   # Read the documentaton on proper setup of either wireguard or openvpn
   # This template is setup for wireguard
-  qbittorrent:
-    container_name: qbittorrent
-    hostname: qbittorrent
+  qb:
+    container_name: qb
+    hostname: qb
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -369,12 +373,9 @@ services:
       - traefik.http.middlewares.qb-headers.headers.customrequestheaders.Origin=
       - traefik.http.routers.qb-rtr.middlewares=qb-strip,qb-redirect,qb-headers
       - traefik.http.routers.qb-rtr.service=qb-svc
-      - traefik.http.routers.qb-rtr.middlewares=chain-no-auth@file
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.qbittorrent-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.qb-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.qb-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.qb-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/qbittorrent
 
@@ -402,11 +403,9 @@ services:
       - traefik.http.routers.nzbhydra2-rtr.rule=Host(`nzbhydra2.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbhydra2`))
       - traefik.http.services.nzbhydra2-svc.loadbalancer.server.port=5076
       - traefik.http.routers.nzbhydra2-rtr.service=nzbhydra2-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.nzbhydra2-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.nzbhydra2-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.nzbhydra2-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/nzbhydra2:testing
 
@@ -428,17 +427,14 @@ services:
       - ${DOCKER_DIR}/prowlarr:/config
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
       - traefik.http.routers.prowlarr-rtr.entrypoints=https
       - traefik.http.routers.prowlarr-rtr.tls=true
       - traefik.http.routers.prowlarr-rtr.rule=Host(`prowlarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/prowlarr`))
       - traefik.http.services.prowlarr-svc.loadbalancer.server.port=5076
       - traefik.http.routers.prowlarr-rtr.service=prowlarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.nzbhydra2-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.prowlarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.prowlarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.prowlarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/prowlarr:nightly
 
@@ -466,11 +462,9 @@ services:
       - traefik.http.routers.trackarr-rtr.rule=Host(`trackarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/trackarr`))
       - traefik.http.services.trackarr-svc.loadbalancer.server.port=7337
       - traefik.http.routers.trackarr-rtr.service=trackarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.trackarr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.trackarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.trackarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.trackarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.trackarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/trackarr:nightly
 
@@ -498,11 +492,9 @@ services:
       - traefik.http.routers.overseerr-rtr.rule=Host(`overseerr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/overseerr`))
       - traefik.http.services.overseerr-svc.loadbalancer.server.port=7337
       - traefik.http.routers.overseerr-rtr.service=overseerr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.overseerr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.overseerr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.overseerr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.overseerr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/overseerr:nightly
 
@@ -569,11 +561,9 @@ services:
       - traefik.http.routers.plex-rtr.rule=Host(`plex.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/plex`))
       - traefik.http.services.plex-svc.loadbalancer.server.port=32400
       - traefik.http.routers.plex-rtr.service=plex-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.plex-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.plex-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.plex-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.plex-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.plex-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/plex:release
 
@@ -602,11 +592,9 @@ services:
       - traefik.http.routers.tautulli-rtr.rule=Host(`tautulli.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli`))
       - traefik.http.services.tautulli-svc.loadbalancer.server.port=8181
       - traefik.http.routers.tautulli-rtr.service=tautulli-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.tautulli-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.tautulli-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.tautulli-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.tautulli-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.tautulli-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/tautulli:latest
 
@@ -653,11 +641,9 @@ services:
       - traefik.http.routers.kitana-rtr.rule=(Host(`kitana.${DOMAIN_NAME}`) && PathPrefix(`/kitana`)) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/kitana`))
       - traefik.http.services.kitana-svc.loadbalancer.server.port=31337
       - traefik.http.routers.kitana-rtr.service=kitana-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.kitana-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.kitana-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.kitana-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.kitana-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.kitana-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: pannal/kitana:latest
 
@@ -687,11 +673,9 @@ services:
       - traefik.http.routers.bazarr-rtr.rule=Host(`bazarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr`))
       - traefik.http.services.bazarr-svc.loadbalancer.server.port=6767
       - traefik.http.routers.bazarr-rtr.service=bazarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.bazarr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.bazarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.bazarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.bazarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.bazarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/bazarr:nightly
 
@@ -721,11 +705,9 @@ services:
       - traefik.http.routers.bazarr-4k-rtr.rule=Host(`bazarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr-4k`))
       - traefik.http.services.bazarr-4k-svc.loadbalancer.server.port=6767
       - traefik.http.routers.bazarr-4k-rtr.service=bazarr-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      - traefik.http.routers.bazarr-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      # - traefik.http.routers.bazarr-4k-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.bazarr-4k-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/bazarr:nightly
 
@@ -758,11 +740,9 @@ services:
       - traefik.http.routers.sonarr-rtr.rule=Host(`sonarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr`))
       - traefik.http.services.sonarr-svc.loadbalancer.server.port=8989
       - traefik.http.routers.sonarr-rtr.service=sonarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.sonarr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.sonarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.sonarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.sonarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.sonarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sonarr:nightly
 
@@ -795,11 +775,9 @@ services:
       - traefik.http.routers.sonarr-4k-rtr.rule=Host(`sonarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr-4k`))
       - traefik.http.services.sonarr-4k-svc.loadbalancer.server.port=8989
       - traefik.http.routers.sonarr-4k-rtr.service=sonarr-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.sonarr-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.sonarr-4k-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.sonarr-4k-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.sonarr-4k-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/sonarr:nightly
 
@@ -832,11 +810,9 @@ services:
       - traefik.http.routers.radarr-rtr.rule=Host(`radarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr`))
       - traefik.http.services.radarr-svc.loadbalancer.server.port=7878
       - traefik.http.routers.radarr-rtr.service=radarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.radarr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.radarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.radarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.radarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.radarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/radarr:nightly
 
@@ -869,11 +845,9 @@ services:
       - traefik.http.routers.radarr-4k-rtr.rule=Host(`radarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k`))
       - traefik.http.services.radarr-4k-svc.loadbalancer.server.port=7878
       - traefik.http.routers.radarr-4k-rtr.service=radarr-4k-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.radarr-4k-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.radarr-4k-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.radarr-4k-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.radarr-4k-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.radarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/radarr:nightly
 
@@ -910,11 +884,9 @@ services:
       - traefik.http.routers.lidarr-rtr.rule=Host(`lidarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/lidarr`))
       - traefik.http.services.lidarr-svc.loadbalancer.server.port=8686
       - traefik.http.routers.lidarr-rtr.service=lidarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.lidarr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.lidarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.lidarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/lidarr:nightly
 
@@ -1048,11 +1020,9 @@ services:
       - traefik.http.routers.readarr-rtr.rule=Host(`readarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr`))
       - traefik.http.services.readarr-svc.loadbalancer.server.port=8787
       - traefik.http.routers.readarr-rtr.service=readarr-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.readarr-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.readarr-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.readarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.readarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.readarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/readarr:nightly
 
@@ -1085,11 +1055,9 @@ services:
       - traefik.http.routers.readarr-ab-rtr.rule=Host(`readarr-ab.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr-ab`))
       - traefik.http.services.readarr-ab-svc.loadbalancer.server.port=8787
       - traefik.http.routers.readarr-ab-rtr.service=readarr-ab-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.readarr-ab-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.readarr-ab-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.readarr-ab-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.readarr-ab-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.readarr-ab-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/readarr:nightly
 
@@ -1124,11 +1092,9 @@ services:
       - traefik.http.routers.mylar3-rtr.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
       - traefik.http.services.mylar3-svc.loadbalancer.server.port=8090
       - traefik.http.routers.mylar3-rtr.service=mylar3-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.mylar3-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.mylar3-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.mylar3-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/mylar3:nightly
 
@@ -1158,11 +1124,9 @@ services:
       - traefik.http.routers.calibre-rtr.rule=Host(`calibre.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre`))
       - traefik.http.services.calibre-svc.loadbalancer.server.port=8080
       - traefik.http.routers.calibre-rtr.service=calibre-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.calibre-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.calibre-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.calibre-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.calibre-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.calibre-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/linuxserver/calibre:latest
 
@@ -1191,11 +1155,9 @@ services:
       - traefik.http.routers.calibre-web-rtr.rule=Host(`calibre-web.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre-web`))
       - traefik.http.services.calibre-web-svc.loadbalancer.server.port=8083
       - traefik.http.routers.calibre-web-rtr.service=calibre-web-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.calibre-web-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.calibre-web-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.calibre-web-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.calibre-web-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.calibre-web-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/linuxserver/calibre-web:latest
 
@@ -1221,11 +1183,9 @@ services:
       - traefik.http.routers.whoami-rtr.rule=Host(`whoami.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whoami`))
       - traefik.http.services.whoami-svc.loadbalancer.server.port=80
       - traefik.http.routers.whoami-rtr.service=whoami-svc
-      # ------------------------------------------------------------------------
-      # Middlewares
-      # - traefik.http.routers.whoami-rtr.middlewares=chain-authelia@file
-      # uncomment below and comment above if you don't wish to use oauth and mfa
-      - traefik.http.routers.whoami-rtr.middlewares=chain-no-auth@file
+      - traefik.http.routers.whoami-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.whoami-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.whoami-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: traefik/whoami
 
