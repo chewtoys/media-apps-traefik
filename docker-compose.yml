@@ -334,11 +334,20 @@ services:
       - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
-      - traefik.http.routers.qbittorrent-rtr.entrypoints=https
-      - traefik.http.routers.qbittorrent-rtr.tls=true
-      - traefik.http.routers.qbittorrent-rtr.rule=Host(`qbittorrent.${DOMAIN_NAME}`)
-      - traefik.http.services.qbittorrent-svc.loadbalancer.server.port=8080
-      - traefik.http.routers.qbittorrent-rtr.service=qbittorrent-svc
+      - traefik.http.services.qb-svc.loadbalancer.server.port=8081
+      - traefik.http.services.qb-svc.loadbalancer.passhostheader=false
+      - traefik.http.routers.qb-rtr.entrypoints=https
+      - traefik.http.routers.qb-rtr.tls=true
+      - traefik.http.routers.qb-rtr.rule=Host(`qb.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`) && PathPrefix(`/qb`)
+      - traefik.http.middlewares.qb-redirect.redirectregex.regex=^(.*)/qb$$
+      - traefik.http.middlewares.qb-redirect.redirectregex.replacement=$$1/qb/
+      - traefik.http.middlewares.qb-strip.stripprefix.prefixes=/qb/
+      - traefik.http.middlewares.qb-headers.headers.customrequestheaders.X-Frame-Options=SAMEORIGIN
+      - traefik.http.middlewares.qb-headers.headers.customrequestheaders.Referer=
+      - traefik.http.middlewares.qb-headers.headers.customrequestheaders.Origin=
+      - traefik.http.routers.qb-rtr.middlewares=qb-strip,qb-redirect,qb-headers
+      - traefik.http.routers.qb-rtr.service=qb-svc
+      - traefik.http.routers.qb-rtr.middlewares=chain-no-auth@file
       # ------------------------------------------------------------------------
       # Middlewares
       # - traefik.http.routers.qbittorrent-rtr.middlewares=chain-authelia@file
