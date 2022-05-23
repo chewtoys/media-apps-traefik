@@ -280,6 +280,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sab
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sabnzbd:/config
@@ -295,7 +297,7 @@ services:
       - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sabnzbd-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/sabnzbd:latest
+    image: ghcr.io/linuxserver/sabnzbd:latest
 
   # nzbget - usenet downloader written in C++ (easynews)
   # Docs: https://hotio.dev/containers/nzbget/
@@ -310,6 +312,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:nzbget
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbget:/config
@@ -325,7 +329,7 @@ services:
       - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/nzbget:latest
+    image: ghcr.io/linuxserver/nzbget:latest
 
   # qbittorrent - torrent download client with VPN built in
   # Docs: https://github.com/binhex/arch-qbittorrentvpn
@@ -392,6 +396,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:nzbhydra2
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbhydra2:/config
@@ -407,7 +413,7 @@ services:
       - traefik.http.routers.nzbhydra2-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.nzbhydra2-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/nzbhydra2:testing
+    image: ghcr.io/linuxserver/nzbhydra2:latest
 
   # prowlarr - usenet and torsnab indexer proxy
   # Docs: hhttps://hotio.dev/containers/prowlarr/
@@ -422,6 +428,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:prowlarr
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/prowlarr:/config
@@ -436,7 +444,7 @@ services:
       - traefik.http.routers.prowlarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.prowlarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/prowlarr:nightly
+    image: ghcr.io/linuxserver/prowlarr:nightly
 
   # trackarr - Tracker announcements to Sonarr/Radarr/Lidarr.
   # Docs: https://hotio.dev/containers/trackarr/
@@ -496,7 +504,7 @@ services:
       - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.overseerr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/overseerr:nightly
+    image: ghcr.io/linuxserver/overseerr:develop
 
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
   # downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
@@ -580,6 +588,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=022
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:tautulli
+      - TP_THEME=${THEME}
     links:
       - plex
     volumes:
@@ -596,7 +606,7 @@ services:
       - traefik.http.routers.tautulli-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.tautulli-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/tautulli:latest
+    image: ghcr.io/linuxserver/tautulli:latest
 
   # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
   # Docs: https://github.com/Cloudbox/autoscan
@@ -630,6 +640,8 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:kitana
+      - TP_THEME=${THEME}
     command: -B 0.0.0.0:31337 -p /kitana -P
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -660,6 +672,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:bazarr
+      - TP_THEME=${THEME}
     links:
       - plex
     volumes:
@@ -677,7 +691,7 @@ services:
       - traefik.http.routers.bazarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/bazarr:nightly
+    image: ghcr.io/linuxserver/bazarr:latest
 
   # bazarr - automatic download subtitles
   # Docs: https://hotio.dev/containers/bazarr/
@@ -692,6 +706,9 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:bazarr
+      - TP_THEME=${THEME}
+      - TP_ADDON=bazarr-4k-logo
     links:
       - plex-4k
     volumes:
@@ -709,7 +726,7 @@ services:
       - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/bazarr:nightly
+    image: ghcr.io/linuxserver/bazarr:latest
 
   # sonarr - TV Shows
   # Docs: https://hotio.dev/containers/sonarr/
@@ -724,6 +741,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr:/config
@@ -744,7 +763,7 @@ services:
       - traefik.http.routers.sonarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sonarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/sonarr:nightly
+    image: ghcr.io/linuxserver/sonarr:develop
 
   # sonarr - TV Shows
   # Docs: https://hotio.dev/containers/sonarr/
@@ -759,6 +778,9 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
+      - TP_THEME=${THEME}
+      - TP_ADDON=sonarr-4k-logo
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr-4k:/config
@@ -779,7 +801,7 @@ services:
       - traefik.http.routers.sonarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/sonarr:nightly
+    image: ghcr.io/linuxserver/sonarr:develop
 
   # radarr - Movies
   # Docs: https://hotio.dev/containers/radarr/
@@ -794,6 +816,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
@@ -814,7 +838,7 @@ services:
       - traefik.http.routers.radarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.radarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/radarr:nightly
+    image: ghcr.io/linuxserver/radarr:nightly
 
   # radarr - Movies
   # Docs: https://hotio.dev/containers/radarr/
@@ -829,6 +853,9 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${THEME}
+      - TP_ADDON=radarr-4k-logo
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k:/config
@@ -849,7 +876,7 @@ services:
       - traefik.http.routers.radarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.radarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/radarr:nightly
+    image: ghcr.io/linuxserver/radarr:nightly
 
   # lidarr - Music
   # Docs: https://hotio.dev/containers/lidarr/
@@ -864,6 +891,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/lidarr:/config
@@ -888,7 +917,7 @@ services:
       - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/lidarr:nightly
+    image: ghcr.io/linuxserver/lidarr:latest
 
   # amd - is a Lidarr companion script to automatically download music for Lidarr
   # Docs: https://github.com/RandomNinjaAtk/docker-amd
@@ -1004,6 +1033,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - calibre
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:readarr
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/readarr:/config
@@ -1024,7 +1055,7 @@ services:
       - traefik.http.routers.readarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.readarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/readarr:nightly
+    image: ghcr.io/linuxserver/readarr:latest
 
   # readarr - eBooks
   # Docs: https://hotio.dev/containers/readarr/
@@ -1040,6 +1071,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:readarr
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/readarr-ab:/config
@@ -1059,7 +1092,7 @@ services:
       - traefik.http.routers.readarr-ab-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.readarr-ab-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/readarr:nightly
+    image: ghcr.io/linuxserver/readarr:latest
 
   # mylar3 - Comics
   # Docs: https://hotio.dev/containers/mylar3/
@@ -1074,6 +1107,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:mylar3
+      - TP_THEME=${THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/mylar3:/config
@@ -1096,7 +1131,7 @@ services:
       - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/hotio/mylar3:nightly
+    image: ghcr.io/linuxserver/mylar3:latest
 
   # calibre - ebook management database
   # docs: https://hub.docker.com/r/linuxserver/calibre
