@@ -572,6 +572,14 @@ services:
       - traefik.http.routers.plex-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.plex-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.plex-rtr.middlewares=authelia@docker
+      #-----------------------------------------------------------------------------
+      - traefik.http.services.webtools-svc.loadbalancer.server.port=33400
+      - traefik.http.routers.webtools-rtr.entrypoints=https
+      - traefik.http.routers.webtools-rtr.tls=true
+      - traefik.http.routers.webtools-rtr.rule=Host(`webtools.${DOMAIN_NAME}`)
+      - traefik.http.routers.webtools-rtr.service=webtools-svc
+      - traefik.http.routers.webtools-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.webtools-rtr.middlewares=secure-headers@docker
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/plex:release
 
