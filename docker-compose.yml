@@ -1238,7 +1238,7 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/20
+        - subnet: 172.20.0.0/24
 
 secrets:
   acme_email:
