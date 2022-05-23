@@ -573,7 +573,8 @@ services:
       - traefik.http.routers.plex-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.plex-rtr.middlewares=authelia@docker
       #-----------------------------------------------------------------------------
-      - traefik.http.services.webtools-svc.loadbalancer.server.port=33400
+      - traefik.http.services.webtools-svc.loadbalancer.server.port=33443
+      - traefik.http.services.webtools-svc.loadbalancer.server.scheme=https
       - traefik.http.routers.webtools-rtr.entrypoints=https
       - traefik.http.routers.webtools-rtr.tls=true
       - traefik.http.routers.webtools-rtr.rule=Host(`webtools.${DOMAIN_NAME}`)
