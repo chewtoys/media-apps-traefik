@@ -329,7 +329,7 @@ services:
       - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/nzbget:latest
+    image: ghcr.io/linuxserver/nzbget:testing
 
   # qbittorrent - torrent download client with VPN built in
   # Docs: https://github.com/binhex/arch-qbittorrentvpn
@@ -413,7 +413,7 @@ services:
       - traefik.http.routers.nzbhydra2-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.nzbhydra2-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/nzbhydra2:latest
+    image: ghcr.io/linuxserver/nzbhydra2:dev
 
   # prowlarr - usenet and torsnab indexer proxy
   # Docs: hhttps://hotio.dev/containers/prowlarr/
@@ -528,7 +528,7 @@ services:
       - ${DOCKER_DIR}/unpackerr:/config
       - ${DATA_DIR}:/data
       - ${DOWNLOAD_DIR}:/data/downloads
-    image: ghcr.io/hotio/unpackerr:nightly
+    image: ghcr.io/hotio/unpackerr:testing
 
   #-----------------------------------------------------------------------------
   # MEDIA
@@ -617,7 +617,7 @@ services:
       - traefik.http.routers.tautulli-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.tautulli-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/tautulli:latest
+    image: ghcr.io/linuxserver/tautulli:develop
 
   # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
   # Docs: https://github.com/Cloudbox/autoscan
@@ -702,7 +702,7 @@ services:
       - traefik.http.routers.bazarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/bazarr:latest
+    image: ghcr.io/linuxserver/bazarr:development
 
   # bazarr - automatic download subtitles
   # Docs: https://hotio.dev/containers/bazarr/
@@ -737,7 +737,7 @@ services:
       - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/bazarr:latest
+    image: ghcr.io/linuxserver/bazarr:development
 
   # sonarr - TV Shows
   # Docs: https://hotio.dev/containers/sonarr/
@@ -928,7 +928,7 @@ services:
       - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/lidarr:latest
+    image: ghcr.io/linuxserver/lidarr:nightly
 
   # amd - is a Lidarr companion script to automatically download music for Lidarr
   # Docs: https://github.com/RandomNinjaAtk/docker-amd
@@ -1066,7 +1066,7 @@ services:
       - traefik.http.routers.readarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.readarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/readarr:latest
+    image: ghcr.io/linuxserver/readarr:nightly
 
   # readarr - eBooks
   # Docs: https://hotio.dev/containers/readarr/
@@ -1103,7 +1103,7 @@ services:
       - traefik.http.routers.readarr-ab-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.readarr-ab-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/readarr:latest
+    image: ghcr.io/linuxserver/readarr:nightly
 
   # mylar3 - Comics
   # Docs: https://hotio.dev/containers/mylar3/
@@ -1142,7 +1142,7 @@ services:
       - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/mylar3:latest
+    image: ghcr.io/linuxserver/mylar3:nightly
 
   # calibre - ebook management database
   # docs: https://hub.docker.com/r/linuxserver/calibre
@@ -1205,7 +1205,7 @@ services:
       - traefik.http.routers.calibre-web-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.calibre-web-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/calibre-web:latest
+    image: ghcr.io/linuxserver/calibre-web:nightly
 
   #-----------------------------------------------------------------------------
   # MISC
