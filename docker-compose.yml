@@ -462,6 +462,8 @@ services:
       - DEBUG=no
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
       - ${DOCKER_DIR}/trackarr:/config
     labels:
       - traefik.enable=true
