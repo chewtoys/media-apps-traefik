@@ -586,6 +586,17 @@ services:
       # ------------------------------------------------------------------------
     image: ghcr.io/hotio/plex:release
 
+  notifiarr:
+    container_name: notifiarr
+    restart: unless-stopped
+    network_mode: service:plex
+    # ports:
+    #   - 5454:5454
+    volumes:
+      - ${DOCKER_DIR}/notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+    image: golift/notifiarr
+
   # tautulli - plex monitor
   # Docs: https://hotio.dev/containers/tautulli/
   tautulli:
