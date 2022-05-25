@@ -1,0 +1,13 @@
+services:
+  plextraktsync:
+    container_name: plextraktsync
+    image: ghcr.io/taxel/plextraktsync
+    networks:
+      apps: {}
+    volumes:
+      - ${DOCKER_DIR}/plextraktsync:/app/config
+
+networks:
+  apps:
+    external:
+      name: media-apps-simple_apps
