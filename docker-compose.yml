@@ -19,7 +19,7 @@ services:
       - 8080:8080
     dns:
       - 1.1.1.1
-      - 8.8.8.8
+      - 1.0.0.1
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
