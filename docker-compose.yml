@@ -822,6 +822,38 @@ services:
       # ------------------------------------------------------------------------
     image: cr.hotio.dev/hotio/radarr:nightly
 
+  # whisparr - Adult Movies
+  # Docker Image Docs: https://hotio.dev/containers/whisparr/
+  # DOCS: https://wiki.servarr.com/en/whisparr
+  whisparr:
+    container_name: whisparr
+    restart: unless-stopped
+    network_mode: service:wireguard
+    depends_on:
+      - sabnzbd
+      - qb
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whisparr-rtr.entrypoints=https
+      - traefik.http.routers.whisparr-rtr.tls=true
+      - traefik.http.routers.whisparr-rtr.rule=Host(`whisparr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whisparr`))
+      - traefik.http.services.whisparr-svc.loadbalancer.server.port=6969
+      - traefik.http.routers.whisparr-rtr.service=whisparr-svc
+      - traefik.http.routers.whisparr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.whisparr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.whisparr-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/whisparr:/config
+      - ${DATA_DIR}:/data
+    image: cr.hotio.dev/hotio/whisparr:nightly
+
   # lidarr - Music
   # Docs: https://hotio.dev/containers/lidarr/
   lidarr:
