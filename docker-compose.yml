@@ -7,8 +7,7 @@ services:
   # traefik - reverse proxy with letsencrypt built in
   # Docs: https://doc.traefik.io/traefik/
   traefik:
-    container_name: traefik
-    hostname: traefik
+    container_name: traefikApps
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -133,7 +132,6 @@ services:
   # docs: https://hub.docker.com/r/organizr/organizr
   organizr:
     container_name: organizr
-    hostname: organizr
     restart: unless-stopped
     networks:
       apps: {}
@@ -172,7 +170,6 @@ services:
   # cant seem to change it, folder permissions need to be set accordingly
   authredis:
     container_name: authredis
-    hostname: authredis
     restart: unless-stopped
     networks:
       apps: {}
@@ -191,7 +188,6 @@ services:
   # mariadb - used for authelia storage
   authmariadb:
     container_name: authmariadb
-    hostname: authmariadb
     restart: unless-stopped
     networks:
       apps: {}
@@ -217,7 +213,6 @@ services:
   # Docs: https://www.authelia.com/docs/
   authelia:
     container_name: authelia
-    hostname: authelia
     restart: unless-stopped
     networks:
       apps: {}
@@ -271,7 +266,6 @@ services:
   # Docs: https://hotio.dev/containers/sabnzbd/
   sabnzbd:
     container_name: sabnzbd
-    hostname: sabnzbd
     restart: unless-stopped
     networks:
       apps: {}
@@ -301,7 +295,6 @@ services:
   # Docs: https://hotio.dev/containers/nzbget/
   nzbget:
     container_name: nzbget
-    hostname: nzbget
     restart: unless-stopped
     networks:
       apps: {}
@@ -333,7 +326,6 @@ services:
   # This template is setup for wireguard
   qb:
     container_name: qb
-    hostname: qb
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -380,7 +372,6 @@ services:
   # Docs: https://hotio.dev/containers/nzbhydra2/
   nzbhydra2:
     container_name: nzbhydra2
-    hostname: nzbhydra2
     restart: unless-stopped
     networks:
       apps: {}
@@ -410,7 +401,6 @@ services:
   # Docs: hhttps://hotio.dev/containers/prowlarr/
   prowlarr:
     container_name: prowlarr
-    hostname: prowlarr
     restart: unless-stopped
     networks:
       network_apps: {}
@@ -439,7 +429,6 @@ services:
   # Docs: https://hotio.dev/containers/trackarr/
   trackarr:
     container_name: trackarr
-    hostname: trackarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -471,7 +460,6 @@ services:
   # Docs: https://hotio.dev/containers/overseerr/
   overseerr:
     container_name: overseerr
-    hostname: overseerr
     restart: unless-stopped
     networks:
       network_apps: {}
@@ -502,7 +490,6 @@ services:
   # Docs: https://hotio.dev/containers/requestrr/
   unpackerr:
     container_name: unpackerr
-    hostname: unpackerr
     restart: unless-stopped
     networks:
       apps: {}
@@ -527,7 +514,6 @@ services:
   # Docs: https://hotio.dev/containers/plex/
   plex:
     container_name: plex
-    hostname: plex
     restart: unless-stopped
     networks:
       apps: {}
@@ -605,7 +591,6 @@ services:
   # Docs: https://hotio.dev/containers/tautulli/
   tautulli:
     container_name: tautulli
-    hostname: tautulli
     restart: unless-stopped
     network_mode: service:plex
     environment:
@@ -624,7 +609,6 @@ services:
   # Docs: https://github.com/Cloudbox/autoscan
   autoscan:
     container_name: autoscan
-    hostname: autoscan
     restart: unless-stopped
     networks:
       apps: {}
@@ -644,7 +628,6 @@ services:
   # Docs: https://hotio.dev/containers/bazarr/
   bazarr:
     container_name: bazarr
-    hostname: bazarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -676,7 +659,6 @@ services:
   # Docs: https://hotio.dev/containers/bazarr/
   bazarr-4k:
     container_name: bazarr-4k
-    hostname: bazarr-4k
     restart: unless-stopped
     networks:
       apps: {}
@@ -708,7 +690,6 @@ services:
   # Docs: https://hotio.dev/containers/sonarr/
   sonarr:
     container_name: sonarr
-    hostname: sonarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -743,7 +724,6 @@ services:
   # Docs: https://hotio.dev/containers/sonarr/
   sonarr-4k:
     container_name: sonarr-4k
-    hostname: sonarr-4k
     restart: unless-stopped
     networks:
       apps: {}
@@ -778,7 +758,6 @@ services:
   # Docs: https://hotio.dev/containers/radarr/
   radarr:
     container_name: radarr
-    hostname: radarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -813,7 +792,6 @@ services:
   # Docs: https://hotio.dev/containers/radarr/
   radarr-4k:
     container_name: radarr-4k
-    hostname: radarr-4k
     restart: unless-stopped
     networks:
       apps: {}
@@ -848,7 +826,6 @@ services:
   # Docs: https://hotio.dev/containers/lidarr/
   lidarr:
     container_name: lidarr
-    hostname: lidarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -887,7 +864,6 @@ services:
   # Docs: https://github.com/RandomNinjaAtk/docker-amd
   amd:
     container_name: amd
-    hostname: amd
     restart: unless-stopped
     networks:
       network_apps: {}
@@ -933,7 +909,6 @@ services:
   # Docs: https://github.com/RandomNinjaAtk/docker-amvd
   amvd:
     container_name: amvd
-    hostname: amvd
     restart: unless-stopped
     networks:
       network_apps: {}
@@ -968,7 +943,6 @@ services:
   # Docs: https://hub.docker.com/r/linuxserver/beets
   beets:
     container_name: beets
-    hostname: beets
     restart: unless-stopped
     networks:
       network_apps: {}
@@ -987,7 +961,6 @@ services:
   # Docs: https://hotio.dev/containers/readarr/
   readarr:
     container_name: readarr
-    hostname: readarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -1024,7 +997,6 @@ services:
   # This version for audiobooks
   readarr-ab:
     container_name: readarr-ab
-    hostname: readarr-ab
     restart: unless-stopped
     networks:
       network_apps: {}
@@ -1058,7 +1030,6 @@ services:
   # Docs: https://hotio.dev/containers/mylar3/
   mylar3:
     container_name: mylar3
-    hostname: mylar3
     restart: unless-stopped
     networks:
       apps: {}
@@ -1095,7 +1066,6 @@ services:
   # docs: https://hub.docker.com/r/linuxserver/calibre
   calibre:
     container_name: calibre
-    hostname: calibre
     restart: unless-stopped
     networks:
       apps: {}
@@ -1127,7 +1097,6 @@ services:
   # docs: https://hub.docker.com/r/linuxserver/calibre-web
   calibre-web:
     container_name: calibre-web
-    hostname: calibre-web
     restart: unless-stopped
     networks:
       apps: {}
@@ -1162,7 +1131,6 @@ services:
   # this is being used to keep apex domain alive
   whoami:
     container_name: whoami
-    hostname: whoami
     networks:
       apps: {}
     environment:
