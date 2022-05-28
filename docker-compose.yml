@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.7'
 services:
   #-----------------------------------------------------------------------------
   # MANAGEMENT
@@ -424,6 +424,35 @@ services:
       # - traefik.http.routers.prowlarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
     image: cr.hotio.dev/hotio/prowlarr:nightly
+
+  # DOCS: https://autobrr.com/getting-started/docker
+  autobrr:
+    container_name: autobrr
+    restart: unless-stopped
+    network_mode: service:wireguard
+    # logging:
+    #   driver: json-file
+    #   options:
+    #     max-file: 300
+    #     max-size: 300
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKER_DIR}/autobrr:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.autobrr-rtr.entrypoints=https
+      - traefik.http.routers.autobrr-rtr.tls=true
+      - traefik.http.routers.autobrr-rtr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
+      - traefik.http.services.autobrr-svc.loadbalancer.server.port=7337
+      - traefik.http.routers.autobrr-rtr.service=autobrr-svc
+      - traefik.http.routers.autobrr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.autobrr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.autobrr-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    image: ghcr.io/autobrr/autobrr
 
   # trackarr - Tracker announcements to Sonarr/Radarr/Lidarr.
   # Docs: https://hotio.dev/containers/trackarr/
