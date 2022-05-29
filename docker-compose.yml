@@ -428,7 +428,7 @@ services:
       - traefik.http.routers.prowlarr-rtr.entrypoints=https
       - traefik.http.routers.prowlarr-rtr.tls=true
       - traefik.http.routers.prowlarr-rtr.rule=Host(`prowlarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/prowlarr`))
-      - traefik.http.services.prowlarr-svc.loadbalancer.server.port=5076
+      - traefik.http.services.prowlarr-svc.loadbalancer.server.port=9696
       - traefik.http.routers.prowlarr-rtr.service=prowlarr-svc
       - traefik.http.routers.prowlarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.prowlarr-rtr.middlewares=secure-headers@docker
@@ -458,7 +458,7 @@ services:
       - traefik.http.routers.autobrr-rtr.entrypoints=https
       - traefik.http.routers.autobrr-rtr.tls=true
       - traefik.http.routers.autobrr-rtr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
-      - traefik.http.services.autobrr-svc.loadbalancer.server.port=7337
+      - traefik.http.services.autobrr-svc.loadbalancer.server.port=7474
       - traefik.http.routers.autobrr-rtr.service=autobrr-svc
       - traefik.http.routers.autobrr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.autobrr-rtr.middlewares=secure-headers@docker
@@ -520,7 +520,7 @@ services:
       - traefik.http.routers.overseerr-rtr.entrypoints=https
       - traefik.http.routers.overseerr-rtr.tls=true
       - traefik.http.routers.overseerr-rtr.rule=Host(`overseerr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/overseerr`))
-      - traefik.http.services.overseerr-svc.loadbalancer.server.port=7337
+      - traefik.http.services.overseerr-svc.loadbalancer.server.port=5055
       - traefik.http.routers.overseerr-rtr.service=overseerr-svc
       - traefik.http.routers.overseerr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
@@ -550,7 +550,7 @@ services:
       - traefik.http.routers.petio-rtr.entrypoints=https
       - traefik.http.routers.petio-rtr.tls=true
       - traefik.http.routers.petio-rtr.rule=Host(`petio.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/petio`))
-      - traefik.http.services.petio-svc.loadbalancer.server.port=7337
+      - traefik.http.services.petio-svc.loadbalancer.server.port=7777
       - traefik.http.routers.petio-rtr.service=petio-svc
       - traefik.http.routers.petio-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.petio-rtr.middlewares=secure-headers@docker
@@ -645,6 +645,7 @@ services:
       - traefik.http.routers.webtools-rtr.service=webtools-svc
       - traefik.http.routers.webtools-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.webtools-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.webtools-rtr.middlewares=authelia@docker
       #-----------------------------------------------------------------------------
       - traefik.http.services.notifiarr-svc.loadbalancer.server.port=5454
       - traefik.http.routers.notifiarr-rtr.entrypoints=https
@@ -653,6 +654,7 @@ services:
       - traefik.http.routers.notifiarr-rtr.service=notifiarr-svc
       - traefik.http.routers.notifiarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.notifiarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.notifiarr-rtr.middlewares=authelia@docker
       #-----------------------------------------------------------------------------
       - traefik.http.services.tautulli-svc.loadbalancer.server.port=8181
       - traefik.http.routers.tautulli-rtr.entrypoints=https
@@ -661,6 +663,7 @@ services:
       - traefik.http.routers.tautulli-rtr.service=tautulli-svc
       - traefik.http.routers.tautulli-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.tautulli-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.tautulli-rtr.middlewares=authelia@docker
     image: cr.hotio.dev/hotio/plex:release
 
   notifiarr:
