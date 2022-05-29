@@ -514,6 +514,47 @@ services:
       # ------------------------------------------------------------------------
     image: cr.hotio.dev/hotio/overseerr:testing
 
+  # petio - media requester
+  # Docker Image Docs: https://hotio.dev/containers/petio/
+  petio:
+    container_name: petio
+    restart: unless-stopped
+    network_mode: service:wireguard
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=022
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/petio:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.petio-rtr.entrypoints=https
+      - traefik.http.routers.petio-rtr.tls=true
+      - traefik.http.routers.petio-rtr.rule=Host(`petio.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/petio`))
+      - traefik.http.services.petio-svc.loadbalancer.server.port=7337
+      - traefik.http.routers.petio-rtr.service=petio-svc
+      - traefik.http.routers.petio-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.petio-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.petio-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    image: cr.hotio.dev/hotio/petio:nightly
+
+  mongo:
+    container_name: mongo
+    restart: unless-stopped
+    network_mode: service:wireguard
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=022
+    user: '${PUID}:${PGID}'
+    volumes:
+      - ${DOCKER_DIR}/mongo:/data/db
+    image: mongo:4.4
+
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
   # downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
   # Docs: https://hotio.dev/containers/requestrr/
