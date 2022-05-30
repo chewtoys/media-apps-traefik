@@ -4,6 +4,19 @@ services:
   # MANAGEMENT
   #-----------------------------------------------------------------------------
 
+  coredns:
+    container_name: coredns
+    restart: unless-stopped
+    networks:
+      apps: {}
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+    volumes:
+      - ${DOCKER_DIR}/etc/coredns:/config
+    command: -conf /etc/coredns/Corefile
+    image: coredns/coredns
+
   # traefik - reverse proxy with letsencrypt built in
   # Docs: https://doc.traefik.io/traefik/
   traefik:
