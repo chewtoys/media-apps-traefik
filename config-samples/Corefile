@@ -1,0 +1,11 @@
+.:53 {
+    forward . 1.1.1.1 1.0.0.1
+    log
+    errors
+}
+
+example.come:53 {
+    file /etc/coredns/db.example.com.zone
+    log
+    errors
+}
