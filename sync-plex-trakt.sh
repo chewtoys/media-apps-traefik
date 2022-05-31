@@ -2,5 +2,5 @@
 
 (
   cd utilities
-  docker-compose run --rm plextraktsync
+  docker compose run --rm plextraktsync
 )

@@ -9,5 +9,4 @@ services:
 
 networks:
   apps:
-    external:
-      name: media-apps-simple_apps
+    name: media-apps-simple_apps

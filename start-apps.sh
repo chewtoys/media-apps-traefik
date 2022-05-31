@@ -11,8 +11,8 @@ echo "--------------------------------------------"
 echo "Creating main applications                  "
 echo "--------------------------------------------"
 sleep 2
-(sudo docker-compose pull &&
-  sudo docker-compose up -d --remove-orphans)
+(sudo docker compose pull &&
+  sudo docker compose up -d --remove-orphans)
 
 echo "--------------------------------------------"
 echo "Removing non-used images"
