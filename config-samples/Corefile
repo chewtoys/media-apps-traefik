@@ -7,7 +7,7 @@
 }
 
 example.come:53 {
-    file /etc/coredns/db.example.com.zone
+    file /config/db.example.com.zone
     log
     errors
     loadbalance

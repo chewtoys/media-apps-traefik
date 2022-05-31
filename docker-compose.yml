@@ -13,8 +13,8 @@ services:
       - 53:53/tcp
       - 53:53/udp
     volumes:
-      - ${DOCKER_DIR}/etc/coredns:/config
-    command: -conf /etc/coredns/Corefile
+      - ${DOCKER_DIR}/coredns:/config
+    command: -conf /config/Corefile
     image: coredns/coredns
 
   # traefik - reverse proxy with letsencrypt built in
