@@ -304,8 +304,8 @@ services:
       - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sabnzbd-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/sabnzbd:latest
-    # image: cr.hotio.dev/hotio/sabnzbd:testing
+    # image: lscr.io/linuxserver/sabnzbd:latest
+    image: cr.hotio.dev/hotio/sabnzbd:testing
 
   # nzbget - usenet downloader written in C++ (easynews)
   # Docs: https://hotio.dev/containers/nzbget/
@@ -336,8 +336,8 @@ services:
       - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/nzbget:testing
-    # image: cr.hotio.dev/hotio/nzbget:testing
+    # image: lscr.io/linuxserver/nzbget:testing
+    image: cr.hotio.dev/hotio/nzbget:testing
 
   # qbittorrent - torrent download client with VPN built in
   # Docs: https://github.com/binhex/arch-qbittorrentvpn
@@ -416,8 +416,8 @@ services:
       - traefik.http.routers.nzbhydra2-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.nzbhydra2-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/nzbhydra2:dev
-    # image: cr.hotio.dev/hotio/nzbhydra2:testing
+    # image: lscr.io/linuxserver/nzbhydra2:dev
+    image: cr.hotio.dev/hotio/nzbhydra2:testing
 
   # prowlarr - usenet and torsnab indexer proxy
   # Docs: hhttps://hotio.dev/containers/prowlarr/
@@ -447,8 +447,8 @@ services:
       - traefik.http.routers.prowlarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.prowlarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/prowlarr:nightly
-    # image: cr.hotio.dev/hotio/prowlarr:nightly
+    # image: lscr.io/linuxserver/prowlarr:nightly
+    image: cr.hotio.dev/hotio/prowlarr:nightly
 
   # DOCS: https://autobrr.com/getting-started/docker
   autobrr:
@@ -539,8 +539,8 @@ services:
       - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.overseerr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/overseerr:develop
-    # image: cr.hotio.dev/hotio/overseerr:testing
+    # image: lscr.io/linuxserver/overseerr:develop
+    image: cr.hotio.dev/hotio/overseerr:nightly
 
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
   # downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
@@ -665,8 +665,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/tautulli:/config
-    image: lscr.io/linuxserver/tautulli:develop
-    # image: cr.hotio.dev/hotio/tautulli:testing
+    # image: lscr.io/linuxserver/tautulli:develop
+    image: cr.hotio.dev/hotio/tautulli:testing
 
   # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
   # Docs: https://github.com/Cloudbox/autoscan
@@ -718,8 +718,8 @@ services:
       - traefik.http.routers.bazarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/bazarr:development
-    # image: cr.hotio.dev/hotio/bazarr:nightly
+    # image: lscr.io/linuxserver/bazarr:development
+    image: cr.hotio.dev/hotio/bazarr:nightly
 
   # bazarr - automatic download subtitles
   # Docs: https://hotio.dev/containers/bazarr/
@@ -753,8 +753,8 @@ services:
       - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/bazarr:development
-    # image: cr.hotio.dev/hotio/bazarr:nightly
+    # image: lscr.io/linuxserver/bazarr:development
+    image: cr.hotio.dev/hotio/bazarr:nightly
 
   # sonarr - TV Shows
   # Docs: https://hotio.dev/containers/sonarr/
@@ -790,8 +790,8 @@ services:
       - traefik.http.routers.sonarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sonarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/sonarr:develop
-    # image: cr.hotio.dev/hotio/sonarr:nightly
+    # image: lscr.io/linuxserver/sonarr:develop
+    image: cr.hotio.dev/hotio/sonarr:nightly
 
   # sonarr - TV Shows
   # Docs: https://hotio.dev/containers/sonarr/
@@ -828,8 +828,8 @@ services:
       - traefik.http.routers.sonarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/sonarr:develop
-    # image: cr.hotio.dev/hotio/sonarr:nightly
+    # image: lscr.io/linuxserver/sonarr:develop
+    image: cr.hotio.dev/hotio/sonarr:nightly
 
   # radarr - Movies
   # Docs: https://hotio.dev/containers/radarr/
@@ -865,8 +865,8 @@ services:
       - traefik.http.routers.radarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.radarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/radarr:nightly
-    # image: cr.hotio.dev/hotio/radarr:nightly
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
 
   # radarr - Movies
   # Docs: https://hotio.dev/containers/radarr/
@@ -903,8 +903,8 @@ services:
       - traefik.http.routers.radarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.radarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/radarr:nightly
-    # image: cr.hotio.dev/hotio/radarr:nightly
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
 
   # whisparr - Adult Movies
   # Docker Image Docs: https://hotio.dev/containers/whisparr/
@@ -978,8 +978,8 @@ services:
       - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/lidarr:nightly
-    # image: cr.hotio.dev/hotio/lidarr:nightly
+    # image: lscr.io/linuxserver/lidarr:nightly
+    image: cr.hotio.dev/hotio/lidarr:nightly
 
   # amd - is a Lidarr companion script to automatically download music for Lidarr
   # Docs: https://github.com/RandomNinjaAtk/docker-amd
@@ -1113,8 +1113,8 @@ services:
       - traefik.http.routers.readarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.readarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/readarr:nightly
-    # image: cr.hotio.dev/hotio/readarr:nightly
+    # image: lscr.io/linuxserver/readarr:nightly
+    image: cr.hotio.dev/hotio/readarr:nightly
 
   # readarr - eBooks
   # Docs: https://hotio.dev/containers/readarr/
@@ -1150,8 +1150,8 @@ services:
       - traefik.http.routers.readarr-ab-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.readarr-ab-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/readarr:nightly
-    # image: cr.hotio.dev/hotio/readarr:nightly
+    # image: lscr.io/linuxserver/readarr:nightly
+    image: cr.hotio.dev/hotio/readarr:nightly
 
   # mylar3 - Comics
   # Docs: https://hotio.dev/containers/mylar3/
@@ -1189,8 +1189,8 @@ services:
       - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
-    image: lscr.io/linuxserver/mylar3:nightly
-    # image: cr.hotio.dev/hotio/mylar3:nightly
+    # image: lscr.io/linuxserver/mylar3:nightly
+    image: cr.hotio.dev/hotio/mylar3:nightly
 
   # calibre - ebook management database
   # docs: https://hub.docker.com/r/linuxserver/calibre
