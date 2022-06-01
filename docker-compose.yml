@@ -19,7 +19,7 @@ services:
   # traefik - reverse proxy with letsencrypt built in
   # Docs: https://doc.traefik.io/traefik/
   traefik:
-    container_name: traefikApps
+    container_name: traefik
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -39,6 +39,7 @@ services:
       # ------------------------------------------------------------------------
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
+      # ------------------------------------------------------------------------
     command: # CLI arguments
       - --global.checkNewVersion=true
       - --global.sendAnonymousUsage=true
@@ -53,7 +54,7 @@ services:
       - --serversTransport.insecureSkipVerify=true
       - --log=true
       # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-      - --log.level=ERROR
+      - --log.level=INFO
       - --accessLog=true
       - --accessLog.filePath=/config/traefik.log
       - --accessLog.bufferingSize=100
@@ -62,7 +63,7 @@ services:
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.${DOMAIN_NAME}`)
       - --providers.docker.exposedByDefault=false
-      - --providers.docker.network=media-apps-traefik_apps
+      - --providers.docker.network=media-apps-simple_apps
       - --providers.docker.swarmMode=false
       - --providers.file.watch=true
       - --providers.file.directory=/config/rules
@@ -80,16 +81,13 @@ services:
       # ------------------------------------------------------------------------
     labels:
       - traefik.enable=true
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.http-catchall.entrypoints=http
+      - traefik.http.routers.http-catchall.entrypoints=https
       - traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.http-catchall.middlewares=redirect-to-https
-      # ------------------------------------------------------------------------
       - traefik.http.routers.traefik-rtr.tls=true
       - traefik.http.routers.traefik-rtr.entrypoints=https
       - traefik.http.routers.traefik-rtr.tls.certresolver=letsencrypt
-      # ------------------------------------------------------------------------
       - traefik.http.routers.traefik-rtr.rule=Host(`traefik.${DOMAIN_NAME}`)
       - traefik.http.routers.traefik-rtr.tls.domains[0].main=${DOMAIN_NAME}
       - traefik.http.routers.traefik-rtr.tls.domains[0].sans=*.${DOMAIN_NAME}
@@ -139,214 +137,39 @@ services:
       - ${DOCKER_DIR}/cloudflareddns:/config
     image: cr.hotio.dev/hotio/cloudflareddns
 
-  # organizr - WebApp portal for bookmarks, prevents multiple tabs
-  # mostly used for sonarr and the like
-  # docs: https://hub.docker.com/r/organizr/organizr
-  organizr:
-    container_name: organizr
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - fpm=true
-      - branch=v2-develop
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/organizr:/config
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.organizr-rtr.entrypoints=https
-      - traefik.http.routers.organizr-rtr.tls=true
-      - traefik.http.routers.organizr-rtr.rule=Host(`organizr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/organizr`))
-      - traefik.http.services.organizr-svc.loadbalancer.server.port=80
-      - traefik.http.routers.organizr-rtr.service=organizr-svc
-      - traefik.http.routers.organizr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.organizr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.organizr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    image: ghcr.io/organizr/organizr:latest
-
-  #-----------------------------------------------------------------------------
-  # OAUTH and MFA
-  #-----------------------------------------------------------------------------
-  # Comment or delete this section if you're not interested in oauth or MFA.
-  # It is recommended as it adds a layer of security to your applications,
-  # specially if they're internet facing.
-  #-----------------------------------------------------------------------------
-
-  # redis - session database (more performance)
-  # default run PUID is 1001 and PGID is root(0)
-  # cant seem to change it, folder permissions need to be set accordingly
-  authredis:
-    container_name: authredis
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/authredis:/bitnami/redis/data
-      - ${DOCKER_DIR}/authredis/redis.conf:/opt/bitnami/redis/mounted-etc/redis.conf
-    secrets:
-      - redis
-    command: /opt/bitnami/scripts/redis/run.sh --requirepass ${REDIS_PASSWORD}
-    image: bitnami/redis:latest
-
-  # mariadb - used for authelia storage
-  authmariadb:
-    container_name: authmariadb
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - UMASK_SET=022
-      - UMASK=022
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/mysql_root
-      - FILE__MYSQL_PASSWORD=/run/secrets/mysql
-      - MYSQL_DATABASE=authelia
-      - MYSQL_USER=authelia
-    secrets:
-      - mysql
-      - mysql_root
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/authmariadb:/config
-    image: ghcr.io/linuxserver/mariadb:latest
-
-  # Authelia - Self-Hosted Single Sign-On and Two-Factor Authentication
-  # Docs: https://www.authelia.com/docs/
-  authelia:
-    container_name: authelia
-    restart: unless-stopped
-    networks:
-      apps: {}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/authelia:/config
-    environment:
-      - TZ=${TZ}
-      - AUTHELIA_JWT_SECRET_FILE=/run/secrets/jwt
-      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/session
-      - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/mysql
-      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/smtp
-      - AUTHELIA_DUO_API_SECRET_KEY_FILE=/run/secrets/duo
-      - AUTHELIA_SESSION_REDIS_PASSWORD_FILE=/run/secrets/redis
-      - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/postgress
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap
-    labels:
-      - traefik.enable=true
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.authelia-rtr.entrypoints=https
-      - traefik.http.routers.authelia-rtr.tls=true
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.authelia-rtr.rule=Host(`authelia.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/authelia`))
-      - traefik.http.services.authelia-svc.loadbalancer.server.port=9091
-      - traefik.http.routers.authelia-rtr.service=authelia-svc
-      - traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.${DOMAIN_NAME}/
-      - traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true
-      - traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email
-      - traefik.http.middlewares.authelia-basic.forwardauth.address=http://authelia:9091/api/verify?auth=basic
-      - traefik.http.middlewares.authelia-basic.forwardauth.trustForwardHeader=true
-      - traefik.http.middlewares.authelia-basic.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email
-      # ------------------------------------------------------------------------
-    secrets:
-      - jwt
-      - session
-      - mysql
-      - smtp
-      - duo
-      - redis
-      - postgress
-      - ldap
-    depends_on:
-      - authredis
-      - authmariadb
-    image: authelia/authelia:latest
-
   #-----------------------------------------------------------------------------
   # DOWNLOADS
   #-----------------------------------------------------------------------------
+
   # sabnzbd - usenet downloader written in python (easynews)
-  # Docs: https://hotio.dev/containers/sabnzbd/
+  # Docker Image Docker Image Docs: https://hotio.dev/containers/sabnzbd/
+  # DOCs: https://sabnzbd.org/wiki/
   sabnzbd:
     container_name: sabnzbd
     restart: unless-stopped
-    networks:
-      apps: {}
+    network_mode: service:qb
     environment:
       - TZ=${TZ}
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sabnzbd
-      - TP_THEME=${TP_THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sabnzbd:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.sabnzbd-rtr.entrypoints=https
-      - traefik.http.routers.sabnzbd-rtr.tls=true
-      - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
-      - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
-      - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
-      - traefik.http.routers.sabnzbd-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.sabnzbd-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
+      - ${DATA_DIR}/usenet:/data/usenet
     # image: lscr.io/linuxserver/sabnzbd:latest
     image: cr.hotio.dev/hotio/sabnzbd:testing
 
-  # nzbget - usenet downloader written in C++ (easynews)
-  # Docs: https://hotio.dev/containers/nzbget/
-  nzbget:
-    container_name: nzbget
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:nzbget
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/nzbget:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.nzbget-rtr.entrypoints=https
-      - traefik.http.routers.nzbget-rtr.tls=true
-      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
-      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
-      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
-      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/nzbget:testing
-    image: cr.hotio.dev/hotio/nzbget:testing
-
   # qbittorrent - torrent download client with VPN built in
-  # Docs: https://github.com/binhex/arch-qbittorrentvpn
-  # Read the documentaton on proper setup of either wireguard or openvpn
+  # Docker Image Docs: https://hotio.dev/containers/qflood/
+  # Read the documentaton on proper setup of either wireguard
   # This template is setup for wireguard
   qb:
     container_name: qb
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
+      - SYS_MODULE
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=1
@@ -361,10 +184,6 @@ services:
       - VPN_LAN_NETWORK=172.20.0.0/20
       - WEBUI_PORTS=8081/tcp
       - VPN_CONF=wg0
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/qbittorrent:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
     labels:
       - traefik.enable=true
       - traefik.http.services.qb-svc.loadbalancer.server.port=8081
@@ -382,14 +201,29 @@ services:
       - traefik.http.routers.qb-rtr.service=qb-svc
       - traefik.http.routers.qb-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.qb-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.qb-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
+      #-----------------------------------------------------------------------------
+      # SABNZBD - shares network stack with QB for VPN Connectivity
+      #-----------------------------------------------------------------------------
+      - traefik.http.routers.sabnzbd-rtr.entrypoints=https
+      - traefik.http.routers.sabnzbd-rtr.tls=true
+      - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
+      - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
+      - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
+      - traefik.http.routers.sabnzbd-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/qbittorrent:/config
+      - ${DATA_DIR}/torrents:/data/torrents
+    devices:
+      - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
 
-  # nzbhydra2 - usenet and torsnab indexer proxy
-  # Docs: https://hotio.dev/containers/nzbhydra2/
-  nzbhydra2:
-    container_name: nzbhydra2
+  # prowlarr - usenet and torsnab indexer proxy
+  # Docker Image Docs: hhttps://hotio.dev/containers/prowlarr/
+  # DOCS: https://wiki.servarr.com/prowlarr
+  prowlarr:
+    container_name: prowlarr
     restart: unless-stopped
     networks:
       apps: {}
@@ -398,43 +232,6 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:nzbhydra2
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/nzbhydra2:/config
-      - ${DOWNLOAD_DIR}:/data/downloads
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.nzbhydra2-rtr.entrypoints=https
-      - traefik.http.routers.nzbhydra2-rtr.tls=true
-      - traefik.http.routers.nzbhydra2-rtr.rule=Host(`nzbhydra2.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbhydra2`))
-      - traefik.http.services.nzbhydra2-svc.loadbalancer.server.port=5076
-      - traefik.http.routers.nzbhydra2-rtr.service=nzbhydra2-svc
-      - traefik.http.routers.nzbhydra2-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.nzbhydra2-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.nzbhydra2-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/nzbhydra2:dev
-    image: cr.hotio.dev/hotio/nzbhydra2:testing
-
-  # prowlarr - usenet and torsnab indexer proxy
-  # Docs: hhttps://hotio.dev/containers/prowlarr/
-  prowlarr:
-    container_name: prowlarr
-    restart: unless-stopped
-    networks:
-      network_apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:prowlarr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/prowlarr:/config
     labels:
       - traefik.enable=true
       - traefik.http.routers.prowlarr-rtr.entrypoints=https
@@ -444,106 +241,15 @@ services:
       - traefik.http.routers.prowlarr-rtr.service=prowlarr-svc
       - traefik.http.routers.prowlarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.prowlarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.prowlarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/prowlarr:/config
     # image: lscr.io/linuxserver/prowlarr:nightly
     image: cr.hotio.dev/hotio/prowlarr:nightly
 
-  # DOCS: https://autobrr.com/getting-started/docker
-  autobrr:
-    container_name: autobrr
-    restart: unless-stopped
-    network_mode: service:wireguard
-    # logging:
-    #   driver: json-file
-    #   options:
-    #     max-file: 300
-    #     max-size: 300
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${DOCKER_DIR}/autobrr:/config
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.autobrr-rtr.entrypoints=https
-      - traefik.http.routers.autobrr-rtr.tls=true
-      - traefik.http.routers.autobrr-rtr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
-      - traefik.http.services.autobrr-svc.loadbalancer.server.port=7474
-      - traefik.http.routers.autobrr-rtr.service=autobrr-svc
-      - traefik.http.routers.autobrr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.autobrr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.autobrr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    image: ghcr.io/autobrr/autobrr
-
-  # trackarr - Tracker announcements to Sonarr/Radarr/Lidarr.
-  # Docs: https://hotio.dev/containers/trackarr/
-  trackarr:
-    container_name: trackarr
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DEBUG=no
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
-      - ${DOCKER_DIR}/trackarr:/config
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.trackarr-rtr.entrypoints=https
-      - traefik.http.routers.trackarr-rtr.tls=true
-      - traefik.http.routers.trackarr-rtr.rule=Host(`trackarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/trackarr`))
-      - traefik.http.services.trackarr-svc.loadbalancer.server.port=7337
-      - traefik.http.routers.trackarr-rtr.service=trackarr-svc
-      - traefik.http.routers.trackarr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.trackarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.trackarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    image: cr.hotio.dev/hotio/trackarr:nightly
-
-  # overseerr a chatbot used to simplify using services like Sonarr/Radarr/Ombi via the use of chat!
-  # Docs: https://hotio.dev/containers/overseerr/
-  overseerr:
-    container_name: overseerr
-    restart: unless-stopped
-    networks:
-      network_apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DEBUG=no
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:overseerr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/overseerr:/config
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.overseerr-rtr.entrypoints=https
-      - traefik.http.routers.overseerr-rtr.tls=true
-      - traefik.http.routers.overseerr-rtr.rule=Host(`overseerr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/overseerr`))
-      - traefik.http.services.overseerr-svc.loadbalancer.server.port=5055
-      - traefik.http.routers.overseerr-rtr.service=overseerr-svc
-      - traefik.http.routers.overseerr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.overseerr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/overseerr:develop
-    image: cr.hotio.dev/hotio/overseerr:nightly
-
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
-  # downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
-  # Docs: https://hotio.dev/containers/requestrr/
+  # Downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
+  # Docker Image Docs: https://hotio.dev/containers/unpackerr/
   unpackerr:
     container_name: unpackerr
     restart: unless-stopped
@@ -558,16 +264,42 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
-      - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
+      - ${DATA_DIR}/torrents:/data/torrents
     image: cr.hotio.dev/hotio/unpackerr:testing
 
   #-----------------------------------------------------------------------------
   # MEDIA
   #-----------------------------------------------------------------------------
 
+  # overseerr a chatbot used to simplify using services like Sonarr/Radarr/Ombi via the use of chat!
+  # Docs: https://hotio.dev/containers/overseerr/
+  overseerr:
+    container_name: overseerr
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/overseerr:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.overseerr-rtr.entrypoints=https
+      - traefik.http.routers.overseerr-rtr.tls=true
+      - traefik.http.routers.overseerr-rtr.rule=Host(`overseerr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/overseerr`))
+      - traefik.http.services.overseerr-svc.loadbalancer.server.port=5055
+      - traefik.http.routers.overseerr-rtr.service=overseerr-svc
+      - traefik.http.routers.overseerr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
+    # image: lscr.io/linuxserver/overseerr:develop
+    image: cr.hotio.dev/hotio/overseerr:nightly
+
   # plex - media server
-  # Docs: https://hotio.dev/containers/plex/
+  # Docker Image Docs: https://hotio.dev/containers/plex/
   plex:
     container_name: plex
     restart: unless-stopped
@@ -581,20 +313,10 @@ services:
       - PLEX_GID=${PGID}
       - PUID=${PUID}
       - PGID=${PGID}
+      - DEBUG=no
       - PLEX_CLAIM=${PLEX_CLAIM}
       - PLEX_PASS=yes
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
-      #-------------------------------------------------------------------------
-      # If you have an nvidia GPU
-      #-------------------------------------------------------------------------
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
-      #-------------------------------------------------------------------------
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/plex:/config
-      - ${DOCKER_DIR}/plex-transcode:/transcode
-      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       - traefik.http.routers.plex-rtr.entrypoints=https
@@ -614,7 +336,6 @@ services:
       - traefik.http.routers.webtools-rtr.service=webtools-svc
       - traefik.http.routers.webtools-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.webtools-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.webtools-rtr.middlewares=authelia@docker
       #-----------------------------------------------------------------------------
       - traefik.http.services.notifiarr-svc.loadbalancer.server.port=5454
       - traefik.http.routers.notifiarr-rtr.entrypoints=https
@@ -623,7 +344,6 @@ services:
       - traefik.http.routers.notifiarr-rtr.service=notifiarr-svc
       - traefik.http.routers.notifiarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.notifiarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.notifiarr-rtr.middlewares=authelia@docker
       #-----------------------------------------------------------------------------
       - traefik.http.services.tautulli-svc.loadbalancer.server.port=8181
       - traefik.http.routers.tautulli-rtr.entrypoints=https
@@ -632,7 +352,11 @@ services:
       - traefik.http.routers.tautulli-rtr.service=tautulli-svc
       - traefik.http.routers.tautulli-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.tautulli-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.tautulli-rtr.middlewares=authelia@docker
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/plex:/config
+      - ${DOCKER_DIR}/plex-transcode:/transcode
+      - ${DATA_DIR}/media:/data
     image: cr.hotio.dev/hotio/plex:release
 
   notifiarr:
@@ -647,7 +371,7 @@ services:
     image: golift/notifiarr
 
   # tautulli - plex monitor
-  # Docs: https://hotio.dev/containers/tautulli/
+  # Docker Image Docs: https://hotio.dev/containers/tautulli/
   tautulli:
     container_name: tautulli
     restart: unless-stopped
@@ -657,37 +381,15 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=022
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:tautulli
-      - TP_THEME=${TP_THEME}
-    links:
-      - plex
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/tautulli:/config
     # image: lscr.io/linuxserver/tautulli:develop
     image: cr.hotio.dev/hotio/tautulli:testing
 
-  # autoscan - replaces the default Plex behaviour for picking up file changes on the file system
-  # Docs: https://github.com/Cloudbox/autoscan
-  autoscan:
-    container_name: autoscan
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - UMASK=022
-      - DEBUG=yes
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/autoscan:/config
-      - ${DATA_DIR}:/data
-    image: cr.hotio.dev/hotio/autoscan:nightly
-
   # bazarr - automatic download subtitles
-  # Docs: https://hotio.dev/containers/bazarr/
+  # Docker Image Docs: https://hotio.dev/containers/bazarr/
+  # DOCS: https://wiki.bazarr.media/Getting-Started/Setup-Guide/
   bazarr:
     container_name: bazarr
     restart: unless-stopped
@@ -698,14 +400,6 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:bazarr
-      - TP_THEME=${TP_THEME}
-    links:
-      - plex
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/bazarr:/config
-      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       - traefik.http.routers.bazarr-rtr.entrypoints=https
@@ -715,69 +409,29 @@ services:
       - traefik.http.routers.bazarr-rtr.service=bazarr-svc
       - traefik.http.routers.bazarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.bazarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.bazarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/bazarr:development
-    image: cr.hotio.dev/hotio/bazarr:nightly
-
-  # bazarr - automatic download subtitles
-  # Docs: https://hotio.dev/containers/bazarr/
-  bazarr-4k:
-    container_name: bazarr-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:bazarr
-      - TP_THEME=${TP_THEME}
-      - TP_ADDON=bazarr-4k-logo
-    links:
-      - plex-4k
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/bazarr-4k:/config
-      - ${DATA_DIR}:/data
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.bazarr-4k-rtr.entrypoints=https
-      - traefik.http.routers.bazarr-4k-rtr.tls=true
-      - traefik.http.routers.bazarr-4k-rtr.rule=Host(`bazarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr-4k`))
-      - traefik.http.services.bazarr-4k-svc.loadbalancer.server.port=6767
-      - traefik.http.routers.bazarr-4k-rtr.service=bazarr-4k-svc
-      - traefik.http.routers.bazarr-4k-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
+      - ${DOCKER_DIR}/bazarr:/config
+      - ${DATA_DIR}/media:/data
     # image: lscr.io/linuxserver/bazarr:development
     image: cr.hotio.dev/hotio/bazarr:nightly
 
   # sonarr - TV Shows
-  # Docs: https://hotio.dev/containers/sonarr/
+  # Docker Image Docs: https://hotio.dev/containers/sonarr/
+  # DOCS: https://wiki.servarr.com/en/sonarr
   sonarr:
     container_name: sonarr
     restart: unless-stopped
     networks:
       apps: {}
+    depends_on:
+      - sabnzbd
+      - qb
     environment:
       - TZ=${TZ}
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/sonarr:/config
-      - ${DATA_DIR}:/data
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
     labels:
       - traefik.enable=true
       - traefik.http.routers.sonarr-rtr.entrypoints=https
@@ -787,72 +441,29 @@ services:
       - traefik.http.routers.sonarr-rtr.service=sonarr-svc
       - traefik.http.routers.sonarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.sonarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.sonarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/sonarr:develop
-    image: cr.hotio.dev/hotio/sonarr:nightly
-
-  # sonarr - TV Shows
-  # Docs: https://hotio.dev/containers/sonarr/
-  sonarr-4k:
-    container_name: sonarr-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
-      - TP_THEME=${TP_THEME}
-      - TP_ADDON=sonarr-4k-logo
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/sonarr-4k:/config
+      - ${DOCKER_DIR}/sonarr:/config
       - ${DATA_DIR}:/data
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.sonarr-4k-rtr.entrypoints=https
-      - traefik.http.routers.sonarr-4k-rtr.tls=true
-      - traefik.http.routers.sonarr-4k-rtr.rule=Host(`sonarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr-4k`))
-      - traefik.http.services.sonarr-4k-svc.loadbalancer.server.port=8989
-      - traefik.http.routers.sonarr-4k-rtr.service=sonarr-4k-svc
-      - traefik.http.routers.sonarr-4k-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.sonarr-4k-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
     # image: lscr.io/linuxserver/sonarr:develop
     image: cr.hotio.dev/hotio/sonarr:nightly
 
   # radarr - Movies
-  # Docs: https://hotio.dev/containers/radarr/
+  # Docker Image Docs: https://hotio.dev/containers/radarr/
+  # DOCS: https://wiki.servarr.com/en/radarr
   radarr:
     container_name: radarr
     restart: unless-stopped
     networks:
       apps: {}
+    depends_on:
+      - sabnzbd
+      - qb
     environment:
       - TZ=${TZ}
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/radarr:/config
-      - ${DATA_DIR}:/data
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
     labels:
       - traefik.enable=true
       - traefik.http.routers.radarr-rtr.entrypoints=https
@@ -862,422 +473,12 @@ services:
       - traefik.http.routers.radarr-rtr.service=radarr-svc
       - traefik.http.routers.radarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.radarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.radarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/radarr:/config
+      - ${DATA_DIR}:/data
     # image: lscr.io/linuxserver/radarr:nightly
     image: cr.hotio.dev/hotio/radarr:nightly
-
-  # radarr - Movies
-  # Docs: https://hotio.dev/containers/radarr/
-  radarr-4k:
-    container_name: radarr-4k
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
-      - TP_THEME=${TP_THEME}
-      - TP_ADDON=radarr-4k-logo
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/radarr-4k:/config
-      - ${DATA_DIR}:/data
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.radarr-4k-rtr.entrypoints=https
-      - traefik.http.routers.radarr-4k-rtr.tls=true
-      - traefik.http.routers.radarr-4k-rtr.rule=Host(`radarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k`))
-      - traefik.http.services.radarr-4k-svc.loadbalancer.server.port=7878
-      - traefik.http.routers.radarr-4k-rtr.service=radarr-4k-svc
-      - traefik.http.routers.radarr-4k-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.radarr-4k-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.radarr-4k-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
-
-  # whisparr - Adult Movies
-  # Docker Image Docs: https://hotio.dev/containers/whisparr/
-  # DOCS: https://wiki.servarr.com/en/whisparr
-  whisparr:
-    container_name: whisparr
-    restart: unless-stopped
-    network_mode: service:wireguard
-    depends_on:
-      - sabnzbd
-      - qb
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:whisparr
-      - TP_THEME=${TP_THEME}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.whisparr-rtr.entrypoints=https
-      - traefik.http.routers.whisparr-rtr.tls=true
-      - traefik.http.routers.whisparr-rtr.rule=Host(`whisparr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whisparr`))
-      - traefik.http.services.whisparr-svc.loadbalancer.server.port=6969
-      - traefik.http.routers.whisparr-rtr.service=whisparr-svc
-      - traefik.http.routers.whisparr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.whisparr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.whisparr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/whisparr:/config
-      - ${DATA_DIR}:/data
-    image: cr.hotio.dev/hotio/whisparr:nightly
-
-  # lidarr - Music
-  # Docs: https://hotio.dev/containers/lidarr/
-  lidarr:
-    container_name: lidarr
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/lidarr:/config
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
-      - ${DATA_DIR}:/data
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
-    links:
-      - amd
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.lidarr-rtr.entrypoints=https
-      - traefik.http.routers.lidarr-rtr.tls=true
-      - traefik.http.routers.lidarr-rtr.rule=Host(`lidarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/lidarr`))
-      - traefik.http.services.lidarr-svc.loadbalancer.server.port=8686
-      - traefik.http.routers.lidarr-rtr.service=lidarr-svc
-      - traefik.http.routers.lidarr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/lidarr:nightly
-    image: cr.hotio.dev/hotio/lidarr:nightly
-
-  # amd - is a Lidarr companion script to automatically download music for Lidarr
-  # Docs: https://github.com/RandomNinjaAtk/docker-amd
-  amd:
-    container_name: amd
-    restart: unless-stopped
-    networks:
-      network_apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - AUTOSTART=true
-      - SCRIPTINTERVAL=1h
-      - DOWNLOADMODE=wanted
-      - FALLBACKSEARCH=True
-      - LIST=missing
-      - SearchType=both
-      - Concurrency=1
-      - EMBEDDED_COVER_QUALITY=80
-      - FORMAT=FLAC
-      - BITRATE=320
-      - ENABLEPOSTPROCESSING=true
-      - FORCECONVERT=false
-      - requirequality=true
-      - MatchDistance=10
-      - replaygain=true
-      - FolderPermissions=755
-      - FilePermissions=664
-      - MBRAINZMIRROR=https://musicbrainz.org
-      - MBRATELIMIT=1
-      - LidarrUrl=http://lidarr:8686/lidarr
-      - LidarrAPIkey=${LIDARR_API_KEY}
-      - ARL_TOKEN=${ARL_DEEZER_TOKEN}
-      - NOTIFYPLEX=true
-      - PLEXLIBRARYNAME=Music
-      - PLEXURL=http://plex:32400
-      - PLEXTOKEN=${PLEX_TOKEN}
-      - POSTPROCESSTHREADS=4
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/amd:/config
-      - ${DOWNLOAD_DIR}/ama:/downloads-amd
-    image: randomninjaatk/amd:latest
-
-  # amvd - is a Lidarr companion script to automatically download music videos
-  # Docs: https://github.com/RandomNinjaAtk/docker-amvd
-  amvd:
-    container_name: amvd
-    restart: unless-stopped
-    networks:
-      network_apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - AUTOSTART=true
-      - SCRIPTINTERVAL=1h
-      - replaygain=true
-      - FolderPermissions=755
-      - FilePermissions=664
-      - MBRATELIMIT=1
-      - LidarrUrl=http://lidarr:8686/lidarr
-      - LidarrAPIkey=${LIDARR_API_KEY}
-      - SOURCE_CONNECTION=lidarr
-      - CountryCode=us
-      - RequireVideoMatch=true
-      - subtitlelanguage=en
-      - videofilter="live"
-      - WriteNFOs=true
-      - USEFOLDERS=true
-      - USEVIDEOFOLDERS=true
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/amvd:/config
-      - ${MEDIA_DIR}/Music-Videos:/downloads-amvd
-    image: randomninjaatk/amvd:latest
-
-  # beets - Music tagger
-  # Docs: https://hub.docker.com/r/linuxserver/beets
-  beets:
-    container_name: beets
-    restart: unless-stopped
-    networks:
-      network_apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/beets:/config
-      - ${DATA_DIR}:/data
-    image: ghcr.io/linuxserver/beets:nightly
-
-  # readarr - eBooks
-  # Docs: https://hotio.dev/containers/readarr/
-  readarr:
-    container_name: readarr
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - calibre
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:readarr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/readarr:/config
-      - ${DATA_DIR}:/data
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.readarr-rtr.entrypoints=https
-      - traefik.http.routers.readarr-rtr.tls=true
-      - traefik.http.routers.readarr-rtr.rule=Host(`readarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr`))
-      - traefik.http.services.readarr-svc.loadbalancer.server.port=8787
-      - traefik.http.routers.readarr-rtr.service=readarr-svc
-      - traefik.http.routers.readarr-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.readarr-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.readarr-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/readarr:nightly
-    image: cr.hotio.dev/hotio/readarr:nightly
-
-  # readarr - eBooks
-  # Docs: https://hotio.dev/containers/readarr/
-  # This version for audiobooks
-  readarr-ab:
-    container_name: readarr-ab
-    restart: unless-stopped
-    networks:
-      network_apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:readarr
-      - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/readarr-ab:/config
-      - ${DATA_DIR}:/data
-      - ${DOWNLOAD_DIR}:/data/downloads
-    depends_on:
-      - nzbhydra2
-      - sabnzbd
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.readarr-ab-rtr.entrypoints=https
-      - traefik.http.routers.readarr-rtr.tls=true
-      - traefik.http.routers.readarr-ab-rtr.rule=Host(`readarr-ab.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/readarr-ab`))
-      - traefik.http.services.readarr-ab-svc.loadbalancer.server.port=8787
-      - traefik.http.routers.readarr-ab-rtr.service=readarr-ab-svc
-      - traefik.http.routers.readarr-ab-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.readarr-ab-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.readarr-ab-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/readarr:nightly
-    image: cr.hotio.dev/hotio/readarr:nightly
-
-  # mylar3 - Comics
-  # Docs: https://hotio.dev/containers/mylar3/
-  mylar3:
-    container_name: mylar3
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/mylar3:/config
-      # TEMP DIR for DDL Downloads
-      - ${DOCKER_DIR}/mylar3/downloads:/downloads
-      - ${DATA_DIR}:/data
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:mylar3
-      - TP_THEME=${TP_THEME}
-    depends_on:
-      - nzbhydra2
-      - nzbget
-      - sabnzbd
-      - qbittorrent
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.mylar3-rtr.entrypoints=https
-      - traefik.http.routers.mylar3-rtr.tls=true
-      - traefik.http.routers.mylar3-rtr.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
-      - traefik.http.services.mylar3-svc.loadbalancer.server.port=8090
-      - traefik.http.routers.mylar3-rtr.service=mylar3-svc
-      - traefik.http.routers.mylar3-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/mylar3:nightly
-    image: cr.hotio.dev/hotio/mylar3:nightly
-
-  # calibre - ebook management database
-  # docs: https://hub.docker.com/r/linuxserver/calibre
-  calibre:
-    container_name: calibre
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - GUAC_USER=${GUAC_USER}
-      - GUAC_PASS=${GUAC_PASS}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/calibre:/config
-      - ${DATA_DIR}:/data
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.calibre-rtr.entrypoints=https
-      - traefik.http.routers.calibre-rtr.tls=true
-      - traefik.http.routers.calibre-rtr.rule=Host(`calibre.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre`))
-      - traefik.http.services.calibre-svc.loadbalancer.server.port=8080
-      - traefik.http.routers.calibre-rtr.service=calibre-svc
-      - traefik.http.routers.calibre-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.calibre-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.calibre-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/calibre:latest
-
-  # calibre-web - web frontend for calibre
-  # docs: https://hub.docker.com/r/linuxserver/calibre-web
-  calibre-web:
-    container_name: calibre-web
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/linuxserver/calibre-web:calibre
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/calibre-web:/config
-      - ${DATA_DIR}:/data
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.calibre-web-rtr.entrypoints=https
-      - traefik.http.routers.calibre-web-rtr.tls=true
-      - traefik.http.routers.calibre-web-rtr.rule=Host(`calibre-web.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/calibre-web`))
-      - traefik.http.services.calibre-web-svc.loadbalancer.server.port=8083
-      - traefik.http.routers.calibre-web-rtr.service=calibre-web-svc
-      - traefik.http.routers.calibre-web-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.calibre-web-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.calibre-web-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    image: ghcr.io/linuxserver/calibre-web:nightly
-
-  #-----------------------------------------------------------------------------
-  # MISC
-  #-----------------------------------------------------------------------------
-
-  # whoami - simple service that returns PC information from where it was accessed.
-  # this is being used to keep apex domain alive
-  whoami:
-    container_name: whoami
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.whoami-rtr.entrypoints=https
-      - traefik.http.routers.whoami-rtr.tls=true
-      - traefik.http.routers.whoami-rtr.rule=Host(`whoami.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whoami`))
-      - traefik.http.services.whoami-svc.loadbalancer.server.port=80
-      - traefik.http.routers.whoami-rtr.service=whoami-svc
-      - traefik.http.routers.whoami-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.whoami-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.whoami-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    image: traefik/whoami
 
 networks:
   apps:
@@ -1285,37 +486,3 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/24
-
-secrets:
-  acme_email:
-    file: ${DOCKER_DIR}/secrets/acme_email
-  calibre_user:
-    file: ${DOCKER_DIR}/secrets/calibre_user
-  calibre_pass:
-    file: ${DOCKER_DIR}/secrets/calibre_pass
-  jwt:
-    file: ${DOCKER_DIR}/secrets/jwt
-  session:
-    file: ${DOCKER_DIR}/secrets/session
-  mysql:
-    file: ${DOCKER_DIR}/secrets/mysql
-  mysql_root:
-    file: ${DOCKER_DIR}/secrets/mysql_root
-  smtp:
-    file: ${DOCKER_DIR}/secrets/smtp
-  duo:
-    file: ${DOCKER_DIR}/secrets/duo
-  plex_claim:
-    file: ${DOCKER_DIR}/secrets/plex_claim
-  plex_4k_claim:
-    file: ${DOCKER_DIR}/secrets/plex_4k_claim
-  redis:
-    file: ${DOCKER_DIR}/secrets/redis
-  postgress:
-    file: ${DOCKER_DIR}/secrets/postgress
-  ldap:
-    file: ${DOCKER_DIR}/secrets/ldap
-  authmariadb_root_password:
-    file: ${DOCKER_DIR}/secrets/authmariadb_root_password
-  maxminddb:
-    file: ${DOCKER_DIR}/secrets/maxminddb
