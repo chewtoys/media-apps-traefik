@@ -200,6 +200,12 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:8081 || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -257,6 +263,11 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      sabnzbd:
+        condition: service_started
+      qb:
+        condition: service_healthy
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -488,8 +499,10 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      - sabnzbd
-      - qb
+      sabnzbd:
+        condition: service_started
+      qb:
+        condition: service_healthy
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -525,8 +538,10 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      - sabnzbd
-      - qb
+      sabnzbd:
+        condition: service_started
+      qb:
+        condition: service_healthy
     environment:
       - TZ=${TZ}
       - UMASK=022
