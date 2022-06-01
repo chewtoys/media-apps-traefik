@@ -11,6 +11,11 @@ services:
     ports:
       - 53:53/tcp
       - 53:53/udp
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     volumes:
       - ${DOCKER_DIR}/coredns:/config
     command: -conf /config/Corefile
@@ -32,6 +37,11 @@ services:
     dns:
       - 1.1.1.1
       - 1.0.0.1
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
@@ -119,6 +129,11 @@ services:
     container_name: cloudflareddns
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -148,6 +163,11 @@ services:
     container_name: sabnzbd
     restart: unless-stopped
     network_mode: service:qb
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -175,6 +195,11 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -227,6 +252,11 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -255,6 +285,11 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -278,6 +313,11 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -307,6 +347,11 @@ services:
       apps: {}
     ports:
       - 32400:32400/tcp
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - PLEX_UID=${PUID}
@@ -363,8 +408,11 @@ services:
     container_name: notifiarr
     restart: unless-stopped
     network_mode: service:plex
-    # ports:
-    #   - 5454:5454
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     volumes:
       - ${DOCKER_DIR}/notifiarr:/config
       - /var/run/utmp:/var/run/utmp
@@ -376,6 +424,11 @@ services:
     container_name: tautulli
     restart: unless-stopped
     network_mode: service:plex
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
@@ -395,6 +448,11 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -424,6 +482,11 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
       - sabnzbd
       - qb
@@ -456,6 +519,11 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
       - sabnzbd
       - qb
