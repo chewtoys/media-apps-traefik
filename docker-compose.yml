@@ -3,24 +3,6 @@ services:
   # MANAGEMENT
   #-----------------------------------------------------------------------------
 
-  coredns:
-    container_name: coredns
-    restart: unless-stopped
-    networks:
-      apps: {}
-    ports:
-      - 53:53/tcp
-      - 53:53/udp
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    volumes:
-      - ${DOCKER_DIR}/coredns:/config
-    command: -conf /config/Corefile
-    image: coredns/coredns
-
   # traefik - reverse proxy with letsencrypt built in
   # Docs: https://doc.traefik.io/traefik/
   traefik:
