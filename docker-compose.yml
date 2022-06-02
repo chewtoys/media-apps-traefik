@@ -173,6 +173,12 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+    healthcheck:
+      test: curl --fail http://localhost:8080/sabnzbd || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sabnzbd:/config
@@ -265,7 +271,7 @@ services:
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
       sabnzbd:
-        condition: service_started
+        condition: service_healthy
       qb:
         condition: service_healthy
     environment:
@@ -500,7 +506,7 @@ services:
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
       sabnzbd:
-        condition: service_started
+        condition: service_healthy
       qb:
         condition: service_healthy
     environment:
@@ -539,7 +545,7 @@ services:
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
       sabnzbd:
-        condition: service_started
+        condition: service_healthy
       qb:
         condition: service_healthy
     environment:
