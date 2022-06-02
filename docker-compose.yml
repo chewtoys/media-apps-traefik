@@ -355,6 +355,58 @@ services:
     # image: lscr.io/linuxserver/overseerr:develop
     image: cr.hotio.dev/hotio/overseerr:nightly
 
+  # petio a chatbot used to simplify using services like Sonarr/Radarr via the use of chat!
+  # Docs: https://hotio.dev/containers/petio/
+  petio:
+    container_name: petio
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/petio:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.petio-rtr.entrypoints=https
+      - traefik.http.routers.petio-rtr.tls=true
+      - traefik.http.routers.petio-rtr.rule=Host(`petio.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/petio`))
+      - traefik.http.services.petio-svc.loadbalancer.server.port=7777
+      - traefik.http.routers.petio-rtr.service=petio-svc
+      - traefik.http.routers.petio-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.petio-rtr.middlewares=secure-headers@docker
+    # image: lscr.io/linuxserver/petio:develop
+    image: cr.hotio.dev/hotio/petio:nightly
+
+  mongo:
+    container_name: mongo
+    user: ${PUID}:${PGID}
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/mongo:/data/db
+    image: mongo
+
   # plex - media server
   # Docker Image Docs: https://hotio.dev/containers/plex/
   plex:
