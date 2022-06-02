@@ -176,7 +176,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
-      - ${DATA_DIR}/torrents:/data/torrents
+      - ${DATA_DIR}/downloads/torrents:/data/downloads/torrents
     devices:
       - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
@@ -206,7 +206,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbget:/config
-      - ${DATA_DIR}/usenet:/data/usenet
+      - ${DATA_DIR}/downloads/usenet:/data/downloads/usenet
     # image: lscr.io/linuxserver/nzbget:testing
     image: cr.hotio.dev/hotio/nzbget:testing
 
@@ -270,7 +270,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
-      - ${DATA_DIR}/torrents:/data/torrents
+      - ${DATA_DIR}/downloads:/data/downloads
     image: cr.hotio.dev/hotio/unpackerr:testing
 
   #-----------------------------------------------------------------------------
@@ -571,6 +571,45 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
+      - ${DATA_DIR}:/data
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
+
+  # radarr - Movies
+  # Docker Image Docs: https://hotio.dev/containers/radarr/
+  # DOCS: https://wiki.servarr.com/en/radarr
+  radarr-4k:
+    container_name: radarr-4k
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      nzbget:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr-4k-rtr.entrypoints=https
+      - traefik.http.routers.radarr-4k-rtr.tls=true
+      - traefik.http.routers.radarr-4k-rtr.rule=Host(`radarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k`))
+      - traefik.http.services.radarr-4k-svc.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr-4k-rtr.service=radarr-4k-svc
+      - traefik.http.routers.radarr-4k-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.radarr-4k-rtr.middlewares=secure-headers@docker
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/radarr-4k:/config
       - ${DATA_DIR}:/data
     # image: lscr.io/linuxserver/radarr:nightly
     image: cr.hotio.dev/hotio/radarr:nightly
