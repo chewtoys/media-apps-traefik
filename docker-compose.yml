@@ -111,47 +111,6 @@ services:
   # DOWNLOADS
   #-----------------------------------------------------------------------------
 
-  # nzbget - usenet downloader written in C++ (easynews)
-  # Docs: https://hotio.dev/containers/nzbget/
-  nzbget:
-    container_name: nzbget
-    restart: unless-stopped
-    networks:
-      apps: {}
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    healthcheck:
-      test: curl --fail http://localhost:6789 || exit 1
-      interval: 10s
-      retries: 5
-      start_period: 20s
-      timeout: 10s
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/nzbget:/config
-      - ${DATA_DIR}/usenet:/data/usenet
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.nzbget-rtr.entrypoints=https
-      - traefik.http.routers.nzbget-rtr.tls=true
-      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
-      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
-      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
-      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-    # image: lscr.io/linuxserver/nzbget:testing
-    image: cr.hotio.dev/hotio/nzbget:testing
-
   # qbittorrent - torrent download client with VPN built in
   # Docker Image Docs: https://hotio.dev/containers/qflood/
   # Read the documentaton on proper setup of either wireguard
@@ -205,15 +164,15 @@ services:
       - traefik.http.routers.qb-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.qb-rtr.middlewares=secure-headers@docker
       #-----------------------------------------------------------------------------
-      # SABNZBD - shares network stack with QB for VPN Connectivity
+      # NZBGET - shares network stack with QB for VPN Connectivity
       #-----------------------------------------------------------------------------
-      - traefik.http.routers.sabnzbd-rtr.entrypoints=https
-      - traefik.http.routers.sabnzbd-rtr.tls=true
-      - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
-      - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
-      - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
-      - traefik.http.routers.sabnzbd-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
+      - traefik.http.routers.nzbget-rtr.entrypoints=https
+      - traefik.http.routers.nzbget-rtr.tls=true
+      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
+      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
@@ -221,6 +180,35 @@ services:
     devices:
       - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
+
+  # nzbget - usenet downloader written in C++ (easynews)
+  # Docs: https://hotio.dev/containers/nzbget/
+  nzbget:
+    container_name: nzbget
+    restart: unless-stopped
+    network_mode: service:qb
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:6789 || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/nzbget:/config
+      - ${DATA_DIR}/usenet:/data/usenet
+    # image: lscr.io/linuxserver/nzbget:testing
+    image: cr.hotio.dev/hotio/nzbget:testing
 
   # prowlarr - usenet and torsnab indexer proxy
   # Docker Image Docs: hhttps://hotio.dev/containers/prowlarr/
@@ -236,7 +224,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      sabnzbd:
+      nzbget:
         condition: service_healthy
       qb:
         condition: service_healthy
@@ -523,7 +511,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      sabnzbd:
+      nzbget:
         condition: service_healthy
       qb:
         condition: service_healthy
@@ -562,7 +550,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      sabnzbd:
+      nzbget:
         condition: service_healthy
       qb:
         condition: service_healthy
