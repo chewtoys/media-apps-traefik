@@ -111,20 +111,20 @@ services:
   # DOWNLOADS
   #-----------------------------------------------------------------------------
 
-  # sabnzbd - usenet downloader written in python (easynews)
-  # Docker Image Docker Image Docs: https://hotio.dev/containers/sabnzbd/
-  # DOCs: https://sabnzbd.org/wiki/
-  sabnzbd:
-    container_name: sabnzbd
+  # nzbget - usenet downloader written in C++ (easynews)
+  # Docs: https://hotio.dev/containers/nzbget/
+  nzbget:
+    container_name: nzbget
     restart: unless-stopped
-    network_mode: service:qb
+    networks:
+      apps: {}
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:8080/sabnzbd || exit 1
+      test: curl --fail http://localhost:6789 || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
@@ -136,10 +136,21 @@ services:
       - PGID=${PGID}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/sabnzbd:/config
+      - ${DOCKER_DIR}/nzbget:/config
       - ${DATA_DIR}/usenet:/data/usenet
-    # image: lscr.io/linuxserver/sabnzbd:latest
-    image: cr.hotio.dev/hotio/sabnzbd:testing
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nzbget-rtr.entrypoints=https
+      - traefik.http.routers.nzbget-rtr.tls=true
+      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
+      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    # image: lscr.io/linuxserver/nzbget:testing
+    image: cr.hotio.dev/hotio/nzbget:testing
 
   # qbittorrent - torrent download client with VPN built in
   # Docker Image Docs: https://hotio.dev/containers/qflood/
