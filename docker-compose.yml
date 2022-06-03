@@ -205,6 +205,47 @@ services:
       - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
 
+  # sabnzbd - usenet downloader written in python (easynews)
+  # Docs: https://hotio.dev/containers/sabnzbd/
+  sabnzbd:
+    container_name: sabnzbd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:8080/sabnzbd || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/sabnzbd:/config
+      - ${DATA_DIR}/downloads/usenet:/data/downloads/usenet
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sabnzbd-rtr.entrypoints=https
+      - traefik.http.routers.sabnzbd-rtr.tls=true
+      - traefik.http.routers.sabnzbd-rtr.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
+      - traefik.http.services.sabnzbd-svc.loadbalancer.server.port=8080
+      - traefik.http.routers.sabnzbd-rtr.service=sabnzbd-svc
+      - traefik.http.routers.sabnzbd-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.sabnzbd-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    # image: lscr.io/linuxserver/sabnzbd:latest
+    image: cr.hotio.dev/hotio/sabnzbd:testing
+
   # nzbget - usenet downloader written in C++ (easynews)
   # Docs: https://hotio.dev/containers/nzbget/
   nzbget:
@@ -258,6 +299,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      sabnzbd:
+        condition: service_healthy
       nzbget:
         condition: service_healthy
       qb:
@@ -587,6 +630,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      sabnzbd:
+        condition: service_healthy
       nzbget:
         condition: service_healthy
       qb:
@@ -625,6 +670,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      sabnzbd:
+        condition: service_healthy
       nzbget:
         condition: service_healthy
       qb:
@@ -667,6 +714,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      sabnzbd:
+        condition: service_healthy
       nzbget:
         condition: service_healthy
       qb:
@@ -706,6 +755,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      sabnzbd:
+        condition: service_healthy
       nzbget:
         condition: service_healthy
       qb:
