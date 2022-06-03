@@ -502,6 +502,42 @@ services:
     # image: lscr.io/linuxserver/bazarr:development
     image: cr.hotio.dev/hotio/bazarr:nightly
 
+  # bazarr - automatic download subtitles
+  # Docs: https://hotio.dev/containers/bazarr/
+  bazarr-4k:
+    container_name: bazarr-4k
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TP_ADDON=bazarr-4k-logo
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/bazarr-4k:/config
+      - ${DATA_DIR}/media:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bazarr-4k-rtr.entrypoints=https
+      - traefik.http.routers.bazarr-4k-rtr.tls=true
+      - traefik.http.routers.bazarr-4k-rtr.rule=Host(`bazarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr-4k`))
+      - traefik.http.services.bazarr-4k-svc.loadbalancer.server.port=6767
+      - traefik.http.routers.bazarr-4k-rtr.service=bazarr-4k-svc
+      - traefik.http.routers.bazarr-4k-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    # image: lscr.io/linuxserver/bazarr:development
+    image: cr.hotio.dev/hotio/bazarr:nightly
+
   # sonarr - TV Shows
   # Docker Image Docs: https://hotio.dev/containers/sonarr/
   # DOCS: https://wiki.servarr.com/en/sonarr
