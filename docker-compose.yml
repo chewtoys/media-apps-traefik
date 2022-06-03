@@ -162,16 +162,6 @@ services:
       - traefik.http.routers.qb-rtr.service=qb-svc
       - traefik.http.routers.qb-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.qb-rtr.middlewares=secure-headers@docker
-      #-----------------------------------------------------------------------------
-      # NZBGET - shares network stack with QB for VPN Connectivity
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.nzbget-rtr.entrypoints=https
-      - traefik.http.routers.nzbget-rtr.tls=true
-      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
-      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
-      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
-      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
@@ -203,6 +193,15 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nzbget-rtr.entrypoints=https
+      - traefik.http.routers.nzbget-rtr.tls=true
+      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
+      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbget:/config
