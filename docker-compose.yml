@@ -106,6 +106,41 @@ services:
       - ${DOCKER_DIR}/traefik:/config
     image: traefik:latest
 
+  # organizr - WebApp portal for bookmarks, prevents multiple tabs
+  # mostly used for sonarr and the like
+  # docs: https://hub.docker.com/r/organizr/organizr
+  organizr:
+    container_name: organizr
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - fpm=true
+      - branch=v2-develop
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/organizr:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.organizr-rtr.entrypoints=https
+      - traefik.http.routers.organizr-rtr.tls=true
+      - traefik.http.routers.organizr-rtr.rule=Host(`organizr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/organizr`))
+      - traefik.http.services.organizr-svc.loadbalancer.server.port=80
+      - traefik.http.routers.organizr-rtr.service=organizr-svc
+      - traefik.http.routers.organizr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.organizr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.organizr-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    image: ghcr.io/organizr/organizr:latest
+
   #-----------------------------------------------------------------------------
   # DOWNLOADS
   #-----------------------------------------------------------------------------
@@ -155,7 +190,7 @@ services:
       - traefik.http.middlewares.qb-redirect.redirectregex.regex=^(.*)/qb$$
       - traefik.http.middlewares.qb-redirect.redirectregex.replacement=$$1/qb/
       - traefik.http.middlewares.qb-strip.stripprefix.prefixes=/qb/
-      - traefik.http.middlewares.qb-headers.headers.customrequestheaders.X-Frame-Options=SAMEORIGIN
+      - traefik.http.middlewares.qb-headers.headers.customrequestheaders.X-Frame-Options=
       - traefik.http.middlewares.qb-headers.headers.customrequestheaders.Referer=
       - traefik.http.middlewares.qb-headers.headers.customrequestheaders.Origin=
       - traefik.http.routers.qb-rtr.middlewares=qb-strip,qb-redirect,qb-headers
