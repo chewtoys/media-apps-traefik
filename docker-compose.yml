@@ -15,7 +15,6 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 8080:8080
     dns:
       - 1.1.1.1
       - 1.0.0.1
@@ -186,7 +185,8 @@ services:
   nzbget:
     container_name: nzbget
     restart: unless-stopped
-    network_mode: service:qb
+    networks:
+      apps: {}
     logging:
       driver: json-file
       options:
