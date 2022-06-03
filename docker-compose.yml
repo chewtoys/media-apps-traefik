@@ -384,6 +384,12 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
       - PLEX_PASS=yes
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      #-------------------------------------------------------------------------
+      # If you have an nvidia GPU
+      #-------------------------------------------------------------------------
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      #-------------------------------------------------------------------------
     labels:
       - traefik.enable=true
       - traefik.http.routers.plex-rtr.entrypoints=https
@@ -535,6 +541,47 @@ services:
     # image: lscr.io/linuxserver/sonarr:develop
     image: cr.hotio.dev/hotio/sonarr:nightly
 
+  # sonarr - TV Shows
+  # Docs: https://hotio.dev/containers/sonarr/
+  sonarr-4k:
+    container_name: sonarr-4k
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      nzbget:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TP_ADDON=sonarr-4k-logo
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/sonarr-4k:/config
+      - ${DATA_DIR}:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonarr-4k-rtr.entrypoints=https
+      - traefik.http.routers.sonarr-4k-rtr.tls=true
+      - traefik.http.routers.sonarr-4k-rtr.rule=Host(`sonarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr-4k`))
+      - traefik.http.services.sonarr-4k-svc.loadbalancer.server.port=8989
+      - traefik.http.routers.sonarr-4k-rtr.service=sonarr-4k-svc
+      - traefik.http.routers.sonarr-4k-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.sonarr-4k-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    # image: lscr.io/linuxserver/sonarr:develop
+    image: cr.hotio.dev/hotio/sonarr:nightly
+
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
   # DOCS: https://wiki.servarr.com/en/radarr
@@ -597,6 +644,7 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - TP_ADDON=radarr-4k-logo
     labels:
       - traefik.enable=true
       - traefik.http.routers.radarr-4k-rtr.entrypoints=https
