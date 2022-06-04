@@ -312,6 +312,8 @@ services:
         condition: service_healthy
       whisparr:
         condition: service_healthy
+      lidarr:
+        condition: service_healthy
     volumes:
       - ${DOCKER_DIR}/autobrr:/config
     labels:
@@ -350,6 +352,8 @@ services:
       radarr-4k:
         condition: service_healthy
       whisparr:
+        condition: service_healthy
+      lidarr:
         condition: service_healthy
     environment:
       - TZ=${TZ}
@@ -893,6 +897,56 @@ services:
       - ${DOCKER_DIR}/whisparr:/config
       - ${DATA_DIR}:/data
     image: cr.hotio.dev/hotio/whisparr:nightly
+
+  # lidarr - Music
+  # Docs: https://hotio.dev/containers/lidarr/
+  lidarr:
+    container_name: lidarr
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:8686/lidarr/api || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
+      - TP_THEME=${TP_THEME}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/lidarr:/config
+      - /var/run/docker.sock:/var/run/docker.sock
+      # - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
+      - ${DATA_DIR}:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.lidarr-rtr.entrypoints=https
+      - traefik.http.routers.lidarr-rtr.tls=true
+      - traefik.http.routers.lidarr-rtr.rule=Host(`lidarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/lidarr`))
+      - traefik.http.services.lidarr-svc.loadbalancer.server.port=8686
+      - traefik.http.routers.lidarr-rtr.service=lidarr-svc
+      - traefik.http.routers.lidarr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    # image: lscr.io/linuxserver/lidarr:nightly
+    image: cr.hotio.dev/hotio/lidarr:nightly
 
 networks:
   apps:
