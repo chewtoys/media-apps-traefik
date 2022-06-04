@@ -301,6 +301,17 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+    depends_on:
+      sonarr:
+        condition: service_healthy
+      sonarr-4k:
+        condition: service_healthy
+      radarr:
+        condition: service_healthy
+      radarr-4k:
+        condition: service_healthy
+      whisparr:
+        condition: service_healthy
     volumes:
       - ${DOCKER_DIR}/autobrr:/config
     labels:
@@ -329,6 +340,17 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      sonarr:
+        condition: service_healthy
+      sonarr-4k:
+        condition: service_healthy
+      radarr:
+        condition: service_healthy
+      radarr-4k:
+        condition: service_healthy
+      whisparr:
+        condition: service_healthy
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -646,6 +668,12 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:8989/sonarr/api || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     depends_on:
       sabnzbd:
         condition: service_healthy
@@ -686,6 +714,12 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:8989/sonarr-4k/api || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     depends_on:
       sabnzbd:
         condition: service_healthy
@@ -730,6 +764,12 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:7878/radarr/api || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     depends_on:
       sabnzbd:
         condition: service_healthy
@@ -771,6 +811,12 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:7878/radarr-4k/api || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     depends_on:
       sabnzbd:
         condition: service_healthy
@@ -813,6 +859,12 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:6969/whisparr/api || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     depends_on:
       sabnzbd:
         condition: service_healthy
