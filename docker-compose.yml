@@ -284,6 +284,36 @@ services:
     # image: lscr.io/linuxserver/prowlarr:nightly
     image: cr.hotio.dev/hotio/prowlarr:nightly
 
+  # DOCS: https://autobrr.com/getting-started/docker
+  autobrr:
+    container_name: autobrr
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKER_DIR}/autobrr:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.autobrr-rtr.entrypoints=https
+      - traefik.http.routers.autobrr-rtr.tls=true
+      - traefik.http.routers.autobrr-rtr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
+      - traefik.http.services.autobrr-svc.loadbalancer.server.port=7474
+      - traefik.http.routers.autobrr-rtr.service=autobrr-svc
+      - traefik.http.routers.autobrr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.autobrr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.autobrr-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    image: ghcr.io/autobrr/autobrr
+
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
   # Downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
   # Docker Image Docs: https://hotio.dev/containers/unpackerr/
