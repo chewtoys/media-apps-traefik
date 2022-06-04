@@ -100,6 +100,12 @@ services:
       - traefik.http.middlewares.secure-headers.headers.addVaryheader=true
       - traefik.http.middlewares.secure-headers.headers.contentSecurityPolicy=script-src 'self'
       - traefik.http.middlewares.secure-headers.headers.referrerPolicy=origin-when-cross-origin
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -139,6 +145,11 @@ services:
       - traefik.http.routers.organizr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.organizr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     image: ghcr.io/organizr/organizr:latest
 
   #-----------------------------------------------------------------------------
@@ -197,6 +208,12 @@ services:
       - traefik.http.routers.qb-rtr.service=qb-svc
       - traefik.http.routers.qb-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.qb-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
@@ -243,6 +260,11 @@ services:
       - traefik.http.routers.sabnzbd-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.sabnzbd-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     # image: lscr.io/linuxserver/sabnzbd:latest
     image: cr.hotio.dev/hotio/sabnzbd:testing
 
@@ -280,6 +302,12 @@ services:
       - traefik.http.routers.prowlarr-rtr.service=prowlarr-svc
       - traefik.http.routers.prowlarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.prowlarr-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/prowlarr:/config
@@ -327,6 +355,11 @@ services:
       - traefik.http.routers.autobrr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.autobrr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     image: ghcr.io/autobrr/autobrr
 
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
@@ -361,6 +394,13 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - DEBUG=no
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
@@ -400,6 +440,12 @@ services:
       - traefik.http.routers.overseerr-rtr.service=overseerr-svc
       - traefik.http.routers.overseerr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.overseerr-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     # image: lscr.io/linuxserver/overseerr:develop
     image: cr.hotio.dev/hotio/overseerr:nightly
 
@@ -432,6 +478,12 @@ services:
       - traefik.http.routers.petio-rtr.service=petio-svc
       - traefik.http.routers.petio-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.petio-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     # image: lscr.io/linuxserver/petio:develop
     image: cr.hotio.dev/hotio/petio:nightly
 
@@ -450,6 +502,13 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/mongo:/data/db
@@ -520,6 +579,12 @@ services:
       - traefik.http.routers.tautulli-rtr.service=tautulli-svc
       - traefik.http.routers.tautulli-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.tautulli-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
@@ -536,6 +601,13 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - ${DOCKER_DIR}/notifiarr:/config
       - /var/run/utmp:/var/run/utmp
@@ -559,6 +631,13 @@ services:
       - UMASK=022
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:tautulli
       - TP_THEME=${TP_THEME}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/tautulli:/config
@@ -572,6 +651,13 @@ services:
       apps: {}
     volumes:
       - ${DOCKER_DIR}/plextraktsync:/app/config
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
 
   scheduler:
     image: mcuadros/ofelia:latest
@@ -584,6 +670,12 @@ services:
     labels:
       - ofelia.job-run.plextraktsync.schedule="@every 6h"
       - ofelia.job-run.plextraktsync.container="plextraktsync"
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
 
   # bazarr - automatic download subtitles
   # Docker Image Docs: https://hotio.dev/containers/bazarr/
@@ -614,6 +706,12 @@ services:
       - traefik.http.routers.bazarr-rtr.service=bazarr-svc
       - traefik.http.routers.bazarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.bazarr-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr:/config
@@ -656,6 +754,11 @@ services:
       - traefik.http.routers.bazarr-4k-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.bazarr-4k-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     # image: lscr.io/linuxserver/bazarr:development
     image: cr.hotio.dev/hotio/bazarr:nightly
 
@@ -699,6 +802,12 @@ services:
       - traefik.http.routers.sonarr-rtr.service=sonarr-svc
       - traefik.http.routers.sonarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.sonarr-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr:/config
@@ -750,8 +859,13 @@ services:
       - traefik.http.routers.sonarr-4k-rtr.service=sonarr-4k-svc
       - traefik.http.routers.sonarr-4k-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.sonarr-4k-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@docker
+      # - traefik.http.routers.sonarr-4k-rtr.middlewares=authelia@dockerV
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     # image: lscr.io/linuxserver/sonarr:develop
     image: cr.hotio.dev/hotio/sonarr:nightly
 
@@ -795,6 +909,12 @@ services:
       - traefik.http.routers.radarr-rtr.service=radarr-svc
       - traefik.http.routers.radarr-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.radarr-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
@@ -843,6 +963,12 @@ services:
       - traefik.http.routers.radarr-4k-rtr.service=radarr-4k-svc
       - traefik.http.routers.radarr-4k-rtr.middlewares=rate-limit@docker
       - traefik.http.routers.radarr-4k-rtr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k:/config
@@ -892,6 +1018,11 @@ services:
       - traefik.http.routers.whisparr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.whisparr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/whisparr:/config
@@ -945,6 +1076,11 @@ services:
       - traefik.http.routers.lidarr-rtr.middlewares=secure-headers@docker
       # - traefik.http.routers.lidarr-rtr.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     # image: lscr.io/linuxserver/lidarr:nightly
     image: cr.hotio.dev/hotio/lidarr:nightly
 
