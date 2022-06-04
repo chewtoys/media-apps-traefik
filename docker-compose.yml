@@ -269,6 +269,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:prowlarr
+      - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.prowlarr-rtr.entrypoints=https
@@ -529,6 +531,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=022
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:tautulli
+      - TP_THEME=${TP_THEME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/tautulli:/config
@@ -573,6 +577,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:bazarr
+      - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.bazarr-rtr.entrypoints=https
@@ -606,6 +612,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:bazarr
+      - TP_THEME=${TP_THEME}
       - TP_ADDON=bazarr-4k-logo
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -648,6 +656,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
+      - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.sonarr-rtr.entrypoints=https
@@ -686,6 +696,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
+      - TP_THEME=${TP_THEME}
       - TP_ADDON=sonarr-4k-logo
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -728,6 +740,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.radarr-rtr.entrypoints=https
@@ -767,6 +781,8 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${TP_THEME}
       - TP_ADDON=radarr-4k-logo
     labels:
       - traefik.enable=true
@@ -783,6 +799,48 @@ services:
       - ${DATA_DIR}:/data
     # image: lscr.io/linuxserver/radarr:nightly
     image: cr.hotio.dev/hotio/radarr:nightly
+
+  # whisparr - Adult Movies
+  # Docker Image Docs: https://hotio.dev/containers/whisparr/
+  # DOCS: https://wiki.servarr.com/en/whisparr
+  whisparr:
+    container_name: whisparr
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:whisparr
+      - TP_THEME=${TP_THEME}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whisparr-rtr.entrypoints=https
+      - traefik.http.routers.whisparr-rtr.tls=true
+      - traefik.http.routers.whisparr-rtr.rule=Host(`whisparr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whisparr`))
+      - traefik.http.services.whisparr-svc.loadbalancer.server.port=6969
+      - traefik.http.routers.whisparr-rtr.service=whisparr-svc
+      - traefik.http.routers.whisparr-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.whisparr-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.whisparr-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/whisparr:/config
+      - ${DATA_DIR}:/data
+    image: cr.hotio.dev/hotio/whisparr:nightly
 
 networks:
   apps:
