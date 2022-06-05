@@ -1123,6 +1123,59 @@ services:
     # image: lscr.io/linuxserver/lidarr:nightly
     image: cr.hotio.dev/hotio/lidarr:nightly
 
+  # amd - is a Lidarr companion script to automatically download music for Lidarr
+  # Docs: https://github.com/RandomNinjaAtk/docker-amd
+  amd:
+    container_name: amd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - AUTOSTART=true
+      - SCRIPTINTERVAL=1h
+      - DOWNLOADMODE=wanted
+      - FALLBACKSEARCH=True
+      - LIST=missing
+      - SearchType=both
+      - Concurrency=1
+      - EMBEDDED_COVER_QUALITY=80
+      - FORMAT=FLAC
+      - BITRATE=320
+      - ENABLEPOSTPROCESSING=true
+      - FORCECONVERT=false
+      - requirequality=true
+      - MatchDistance=10
+      - replaygain=true
+      - FolderPermissions=755
+      - FilePermissions=664
+      - MBRAINZMIRROR=https://musicbrainz.org
+      - MBRATELIMIT=1
+      - LidarrUrl=http://lidarr:8686/lidarr
+      - LidarrAPIkey=${LIDARR_API_KEY}
+      - ARL_TOKEN=${ARL_DEEZER_TOKEN}
+      - NOTIFYPLEX=true
+      - PLEXLIBRARYNAME=Music
+      - PLEXURL=http://plex:32400
+      - PLEXTOKEN=${PLEX_TOKEN}
+      - POSTPROCESSTHREADS=4
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/amd:/config
+      - ${DATA_DIR}/downloads/ama:/downloads-amd
+    image: randomninjaatk/amd:latest
+
 networks:
   apps:
     driver: bridge
