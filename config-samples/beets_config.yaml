@@ -1,4 +1,4 @@
-directory: /data/media/Music
+directory: /data/media/music
 library: /config/beetslibrary.db
 threaded: yes
 
