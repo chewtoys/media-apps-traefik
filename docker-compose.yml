@@ -1098,13 +1098,6 @@ services:
       - PGID=${PGID}
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
       - TP_THEME=${TP_THEME}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      # - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
-      - ${DATA_DIR}/downloads/ama:/downloads-amd
-      - ${DOCKER_DIR}/lidarr:/config
-      - ${DATA_DIR}:/data
     labels:
       - traefik.enable=true
       - traefik.http.routers.lidarr-rtr.entrypoints=https
@@ -1121,6 +1114,13 @@ services:
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
+      - ${DOCKER_DIR}/lidarr:/config
+      - ${DATA_DIR}:/data
+      - ${DATA_DIR}/downloads/ama:/downloads-amd
     # image: lscr.io/linuxserver/lidarr:nightly
     image: cr.hotio.dev/hotio/lidarr:nightly
 
@@ -1176,6 +1176,33 @@ services:
       - ${DOCKER_DIR}/amd:/config
       - ${DATA_DIR}/downloads/ama:/downloads-amd
     image: randomninjaatk/amd:latest
+
+  # beets - Music tagger
+  # Docs: https://hub.docker.com/r/linuxserver/beets
+  beets:
+    container_name: beets
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_DIR}/beets:/config
+      - ${DATA_DIR}:/data
+    image: ghcr.io/linuxserver/beets:nightly
 
 networks:
   apps:
