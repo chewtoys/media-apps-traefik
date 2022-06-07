@@ -1204,6 +1204,38 @@ services:
       - ${DATA_DIR}:/data
     image: ghcr.io/linuxserver/beets:nightly
 
+  #-----------------------------------------------------------------------------
+  # MISC
+  #-----------------------------------------------------------------------------
+
+  # whoami - simple service that returns PC information from where it was accessed.
+  # this is being used to keep apex domain alive
+  whoami:
+    container_name: whoami
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami-rtr.entrypoints=https
+      - traefik.http.routers.whoami-rtr.tls=true
+      - traefik.http.routers.whoami-rtr.rule=Host(`whoami.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whoami`))
+      - traefik.http.services.whoami-svc.loadbalancer.server.port=80
+      - traefik.http.routers.whoami-rtr.service=whoami-svc
+      - traefik.http.routers.whoami-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.whoami-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.whoami-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+    image: traefik/whoami
+
 networks:
   apps:
     driver: bridge
