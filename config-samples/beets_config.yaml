@@ -14,6 +14,8 @@ plugins:
   - mbsync
   - badfiles
   - scrub
+  - web
+  - plex
 
 import:
   art: yes
@@ -98,3 +100,8 @@ lastfm:
 
 scrub:
   auto: yes
+
+plex:
+  host: plex
+  port: 32400
+  token: [TOKEN]
