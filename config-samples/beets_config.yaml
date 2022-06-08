@@ -15,7 +15,7 @@ plugins:
   - badfiles
   - scrub
   - web
-  - plex
+  - plexupdate
 
 import:
   art: yes
