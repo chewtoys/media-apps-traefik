@@ -154,9 +154,9 @@ services:
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     image: ghcr.io/organizr/organizr:latest
 
-  #-----------------------------------------------------------------------------
-  # DOWNLOADS
-  #-----------------------------------------------------------------------------
+  # #-----------------------------------------------------------------------------
+  # # DOWNLOADS
+  # #-----------------------------------------------------------------------------
 
   # qbittorrent - torrent download client with VPN built in
   # Docker Image Docs: https://hotio.dev/containers/qflood/
@@ -414,9 +414,9 @@ services:
       - ${DATA_DIR}/downloads:/data/downloads
     image: cr.hotio.dev/hotio/unpackerr:testing
 
-  #-----------------------------------------------------------------------------
-  # MEDIA
-  #-----------------------------------------------------------------------------
+  # #-----------------------------------------------------------------------------
+  # # MEDIA
+  # #-----------------------------------------------------------------------------
 
   # overseerr a chatbot used to simplify using services like Sonarr/Radarr/Ombi via the use of chat!
   # Docs: https://hotio.dev/containers/overseerr/
@@ -626,6 +626,24 @@ services:
     # image: lscr.io/linuxserver/tautulli:develop
     image: cr.hotio.dev/hotio/tautulli:testing
 
+  scheduler:
+    image: mcuadros/ofelia:latest
+    container_name: scheduler
+    depends_on:
+      - plextraktsync
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - ofelia.job-run.plextraktsync.schedule="@every 6h"
+      - ofelia.job-run.plextraktsync.container="plextraktsync"
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+
   plextraktsync:
     container_name: plextraktsync
     image: ghcr.io/taxel/plextraktsync
@@ -689,24 +707,6 @@ services:
       - ${DOCKER_DIR}/notifiarr:/config
       - /var/run/utmp:/var/run/utmp
     image: golift/notifiarr
-
-  scheduler:
-    image: mcuadros/ofelia:latest
-    container_name: scheduler
-    depends_on:
-      - plextraktsync
-    command: daemon --docker
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      - ofelia.job-run.plextraktsync.schedule="@every 6h"
-      - ofelia.job-run.plextraktsync.container="plextraktsync"
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
 
   # bazarr - automatic download subtitles
   # Docker Image Docs: https://hotio.dev/containers/bazarr/
@@ -810,7 +810,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:8989/sonarr/api || exit 1
+      test: curl --fail http://localhost:8989/sonarr || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
@@ -863,7 +863,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:8989/sonarr-4k/api || exit 1
+      test: curl --fail http://localhost:8989/sonarr-4k || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
@@ -919,7 +919,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:7878/radarr/api || exit 1
+      test: curl --fail http://localhost:7878/radarr || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
@@ -973,7 +973,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:7878/radarr-4k/api || exit 1
+      test: curl --fail http://localhost:7878/radarr-4k || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
@@ -1028,7 +1028,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:6969/whisparr/api || exit 1
+      test: curl --fail http://localhost:6969/whisparr || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
@@ -1081,7 +1081,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     healthcheck:
-      test: curl --fail http://localhost:8686/lidarr/api || exit 1
+      test: curl --fail http://localhost:8686/lidarr || exit 1
       interval: 10s
       retries: 5
       start_period: 20s
