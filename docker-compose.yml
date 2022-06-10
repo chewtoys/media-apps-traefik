@@ -214,6 +214,20 @@ services:
       - traefik.http.routers.qb.middlewares=rate-limit@docker
       - traefik.http.routers.qb.middlewares=secure-headers@docker
       # ------------------------------------------------------------------------
+      - traefik.http.routers.qb2.entrypoints=https
+      - traefik.http.routers.qb2.tls=true
+      - traefik.http.routers.qb2.rule=Host(`qb.${DOMAIN_NAME2}`) || Host(`${DOMAIN_NAME2}`) && PathPrefix(`/qb`)
+      - traefik.http.middlewares.qb2-redirect.redirectregex.regex=^(.*)/qb$$
+      - traefik.http.middlewares.qb2-redirect.redirectregex.replacement=$$1/qb/
+      - traefik.http.middlewares.qb2-strip.stripprefix.prefixes=/qb/
+      - traefik.http.middlewares.qb2-headers.headers.customrequestheaders.X-Frame-Options=
+      - traefik.http.middlewares.qb2-headers.headers.customrequestheaders.Referer=
+      - traefik.http.middlewares.qb2-headers.headers.customrequestheaders.Origin=
+      - traefik.http.routers.qb2.middlewares=qb2-strip,qb2-redirect,qb2-headers
+      - traefik.http.routers.qb2.service=qb
+      - traefik.http.routers.qb2.middlewares=rate-limit@docker
+      - traefik.http.routers.qb2.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
       - org.hotio.pullio.notify=true
@@ -266,6 +280,14 @@ services:
       - traefik.http.routers.sabnzbd.middlewares=secure-headers@docker
       # - traefik.http.routers.sabnzbd.middlewares=authelia@docker
       # ------------------------------------------------------------------------
+      - traefik.http.routers.sabnzbd2.entrypoints=https
+      - traefik.http.routers.sabnzbd2.tls=true
+      - traefik.http.routers.sabnzbd2.rule=Host(`sabnzbd.${DOMAIN_NAME2}`) || (Host(`${DOMAIN_NAME2}`) && PathPrefix(`/sabnzbd`))
+      - traefik.http.routers.sabnzbd2.service=sabnzbd
+      - traefik.http.routers.sabnzbd2.middlewares=rate-limit@docker
+      - traefik.http.routers.sabnzbd2.middlewares=secure-headers@docker
+      # - traefik.http.routers.sabnzbd.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
       - org.hotio.pullio.notify=true
@@ -309,6 +331,13 @@ services:
       - traefik.http.routers.prowlarr.service=prowlarr
       - traefik.http.routers.prowlarr.middlewares=rate-limit@docker
       - traefik.http.routers.prowlarr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      - traefik.http.routers.prowlarr2.entrypoints=https
+      - traefik.http.routers.prowlarr2.tls=true
+      - traefik.http.routers.prowlarr2.rule=Host(`prowlarr.${DOMAIN_NAME2}`) || (Host(`${DOMAIN_NAME2}`) && PathPrefix(`/prowlarr`))
+      - traefik.http.routers.prowlarr2.service=prowlarr
+      - traefik.http.routers.prowlarr2.middlewares=rate-limit@docker
+      - traefik.http.routers.prowlarr2.middlewares=secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -450,6 +479,13 @@ services:
       - traefik.http.routers.overseerr.service=overseerr
       - traefik.http.routers.overseerr.middlewares=rate-limit@docker
       - traefik.http.routers.overseerr.middlewares=secure-headers@docker
+      # ------------------------------------------------------------------------
+      - traefik.http.routers.overseerr2.entrypoints=https
+      - traefik.http.routers.overseerr2.tls=true
+      - traefik.http.routers.overseerr2.rule=Host(`overseerr.${DOMAIN_NAME2}`) ||  Host(`requests.${DOMAIN_NAME2}`)
+      - traefik.http.routers.overseerr2.service=overseerr
+      - traefik.http.routers.overseerr2.middlewares=rate-limit@docker
+      - traefik.http.routers.overseerr2.middlewares=secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
