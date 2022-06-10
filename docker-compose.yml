@@ -1242,3 +1242,33 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/24
+
+secrets:
+  acme_email_secret:
+    file: ${DOCKER_DIR}/secrets/acme_email_secret
+  calibre_user_secret:
+    file: ${DOCKER_DIR}/secrets/calibre_user_secret
+  calibre_secret:
+    file: ${DOCKER_DIR}/secrets/calibre_secret
+  jwt_secret:
+    file: ${DOCKER_DIR}/secrets/jwt_secret
+  local_session_secret:
+    file: ${DOCKER_DIR}/secrets/local_session_secret
+  mysql_secret:
+    file: ${DOCKER_DIR}/secrets/mysql_secret
+  mysql_root_secret:
+    file: ${DOCKER_DIR}/secrets/mysql_root_secret
+  notifier_smtp_secret:
+    file: ${DOCKER_DIR}/secrets/notifier_smtp_secret
+  duo_api_secret:
+    file: ${DOCKER_DIR}/secrets/duo_api_secret
+  redis_secret:
+    file: ${DOCKER_DIR}/secrets/redis_secret
+  postgres_secret:
+    file: ${DOCKER_DIR}/secrets/postgres_secret
+  ldap_secret:
+    file: ${DOCKER_DIR}/secrets/ldap_secret
+  mariadb_root_secret:
+    file: ${DOCKER_DIR}/secrets/mariadb_root_secret
+  maxminddb_secret:
+    file: ${DOCKER_DIR}/secrets/maxminddb_secret
