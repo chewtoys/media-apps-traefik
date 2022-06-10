@@ -368,6 +368,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -423,6 +425,8 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     depends_on:
+      nzbget:
+        condition: service_healthy
       sonarr:
         condition: service_healthy
       sonarr-4k:
@@ -476,6 +480,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      nzbget:
+        condition: service_healthy
       sonarr:
         condition: service_healthy
       sonarr-4k:
@@ -781,6 +787,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     depends_on:
+      nzbget:
+        condition: service_healthy
       sonarr:
         condition: service_healthy
       sonarr-4k:
@@ -936,6 +944,8 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -994,6 +1004,8 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1055,6 +1067,8 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1114,6 +1128,8 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1174,6 +1190,8 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1232,6 +1250,8 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
+      nzbget:
+        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1287,6 +1307,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      nzbget:
+        condition: service_healthy
       lidarr:
         condition: service_healthy
     environment:
@@ -1340,6 +1362,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
+      nzbget:
+        condition: service_healthy
       lidarr:
         condition: service_healthy
     environment:
