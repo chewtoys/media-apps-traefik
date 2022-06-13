@@ -240,7 +240,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
-      - ${DATA_DIR}/downloads/torrents:/data/downloads/torrents
+      - ${DATA_DIR}/downloads:/data/downloads
     devices:
       - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
@@ -294,7 +294,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sabnzbd:/config
-      - ${DATA_DIR}/downloads/usenet:/data/downloads/usenet
+      - ${DATA_DIR}/downloads:/data/downloads
     # image: lscr.io/linuxserver/sabnzbd:latest
     image: cr.hotio.dev/hotio/sabnzbd:release
 
@@ -349,7 +349,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbget:/config
-      - ${DATA_DIR}/downloads/usenet:/data/downloads/usenet
+      - ${DATA_DIR}/downloads:/data/downloads
     # image: lscr.io/linuxserver/nzbget:testing
     image: cr.hotio.dev/hotio/nzbget:testing
 
