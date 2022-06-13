@@ -368,8 +368,6 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -425,8 +423,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     depends_on:
-      nzbget:
-        condition: service_healthy
       sonarr:
         condition: service_healthy
       sonarr-4k:
@@ -480,8 +476,6 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      nzbget:
-        condition: service_healthy
       sonarr:
         condition: service_healthy
       sonarr-4k:
@@ -787,8 +781,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     depends_on:
-      nzbget:
-        condition: service_healthy
       sonarr:
         condition: service_healthy
       sonarr-4k:
@@ -944,8 +936,6 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1004,8 +994,6 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1067,8 +1055,6 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1128,8 +1114,6 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1190,8 +1174,6 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1250,8 +1232,6 @@ services:
       start_period: 20s
       timeout: 10s
     depends_on:
-      nzbget:
-        condition: service_healthy
       sabnzbd:
         condition: service_healthy
       qb:
@@ -1307,8 +1287,6 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      nzbget:
-        condition: service_healthy
       lidarr:
         condition: service_healthy
     environment:
@@ -1343,6 +1321,13 @@ services:
       - PLEXURL=http://plex:32400
       - PLEXTOKEN=${PLEX_TOKEN}
       - POSTPROCESSTHREADS=4
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/amd:/config
@@ -1362,8 +1347,6 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     depends_on:
-      nzbget:
-        condition: service_healthy
       lidarr:
         condition: service_healthy
     environment:
@@ -1371,12 +1354,65 @@ services:
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DOCKER_DIR}/beets:/config
       - ${DATA_DIR}:/data
     image: ghcr.io/linuxserver/beets:nightly
+
+  # mylar3 - Comics
+  # Docs: https://hotio.dev/containers/mylar3/
+  mylar3:
+    container_name: mylar3
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:mylar3
+      - TP_THEME=${TP_THEME}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mylar3-rtr.entrypoints=https
+      - traefik.http.routers.mylar3-rtr.tls=true
+      - traefik.http.routers.mylar3-rtr.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
+      - traefik.http.services.mylar3-svc.loadbalancer.server.port=8090
+      - traefik.http.routers.mylar3-rtr.service=mylar3-svc
+      - traefik.http.routers.mylar3-rtr.middlewares=rate-limit@docker
+      - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
+      # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+      # ------------------------------------------------------------------------
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/mylar3:/config
+      - ${DATA_DIR}:/data
+    # image: lscr.io/linuxserver/mylar3:nightly
+    image: cr.hotio.dev/hotio/mylar3:nightly
 
   #-----------------------------------------------------------------------------
   # MISC
