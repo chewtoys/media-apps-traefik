@@ -302,6 +302,7 @@ services:
   # Docs: https://hotio.dev/containers/nzbget/
   nzbget:
     container_name: nzbget
+    hostname: nzbget
     restart: unless-stopped
     networks:
       apps: {}
@@ -1278,6 +1279,7 @@ services:
   # Docs: https://github.com/RandomNinjaAtk/docker-amd
   amd:
     container_name: amd
+    hostname: amd
     restart: unless-stopped
     networks:
       apps: {}
@@ -1334,10 +1336,58 @@ services:
       - ${DATA_DIR}/downloads/ama:/downloads-amd
     image: randomninjaatk/amd:latest
 
+  # atd - s a script to automatically archive music for use in other audio applications like plex
+  # Docs: https://github.com/RandomNinjaAtk/docker-atd
+  atd:
+    container_name: atd
+    hostname: atd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - AutoStart=true
+      - ScriptInterval=15m
+      - LidarrUrl=http://lidarr:8686/lidarr
+      - LidarrAPIkey=${LIDARR_API_KEY}
+      - MusicbrainzRateLimit=1
+      - ScriptMode=both
+      - EnableReplayGain=true
+      - CountryCode=US
+      - Compilations=false
+      - WantedQuality=FLAC
+      - RequireQuality=true
+      - FolderPermissions=775
+      - FilePermissions=664
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/atd:/config
+      - ${DATA_DIR}/downloads/atd:/downloads-atd
+    image: randomninjaatk/atd:latest
+
   # beets - Music tagger
   # Docs: https://hub.docker.com/r/linuxserver/beets
   beets:
     container_name: beets
+    hostname: beets
     restart: unless-stopped
     networks:
       apps: {}
@@ -1372,6 +1422,7 @@ services:
   # Docs: https://hotio.dev/containers/mylar3/
   mylar3:
     container_name: mylar3
+    hostname: mylar3
     restart: unless-stopped
     networks:
       apps: {}
@@ -1422,6 +1473,7 @@ services:
   # this is being used to keep apex domain alive
   whoami:
     container_name: whoami
+    hostname: whoami
     networks:
       apps: {}
     logging:
