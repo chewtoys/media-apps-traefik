@@ -674,19 +674,6 @@ services:
       - traefik.http.routers.plex2.rule=Host(`plex.${DOMAIN_NAME2}`) ||  Host(`plex.${DOMAIN_NAME2}`)
       - traefik.http.routers.plex2.service=plex
       - traefik.http.routers.plex2.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.services.tautulli.loadbalancer.server.port=8181
-      - traefik.http.routers.tautulli.entrypoints=https
-      - traefik.http.routers.tautulli.tls=true
-      - traefik.http.routers.tautulli.rule=Host(`tautulli.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli`)
-      - traefik.http.routers.tautulli.service=tautulli
-      - traefik.http.routers.tautulli.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.tautulli2.entrypoints=https
-      - traefik.http.routers.tautulli2.tls=true
-      - traefik.http.routers.tautulli2.rule=Host(`tautulli.${DOMAIN_NAME2}`) ||  Host(`tautulli.${DOMAIN_NAME2}`)
-      - traefik.http.routers.tautulli2.service=tautulli
-      - traefik.http.routers.tautulli2.middlewares=rate-limit@docker,secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -704,8 +691,10 @@ services:
   # Docker Image Docs: https://hotio.dev/containers/tautulli/
   tautulli:
     container_name: tautulli
+    hostname: tautulli
     restart: unless-stopped
-    network_mode: service:plex
+    networks:
+      apps: {}
     logging:
       driver: json-file
       options:
@@ -719,6 +708,19 @@ services:
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:tautulli
       - TP_THEME=${TP_THEME}
     labels:
+      - traefik.enable=true
+      - traefik.http.services.tautulli.loadbalancer.server.port=8181
+      - traefik.http.routers.tautulli.entrypoints=https
+      - traefik.http.routers.tautulli.tls=true
+      - traefik.http.routers.tautulli.rule=Host(`tautulli.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli`)
+      - traefik.http.routers.tautulli.service=tautulli
+      - traefik.http.routers.tautulli.middlewares=rate-limit@docker,secure-headers@docker
+      #-----------------------------------------------------------------------------
+      - traefik.http.routers.tautulli2.entrypoints=https
+      - traefik.http.routers.tautulli2.tls=true
+      - traefik.http.routers.tautulli2.rule=Host(`tautulli.${DOMAIN_NAME2}`) ||  Host(`tautulli.${DOMAIN_NAME2}`)
+      - traefik.http.routers.tautulli2.service=tautulli
+      - traefik.http.routers.tautulli2.middlewares=rate-limit@docker,secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
