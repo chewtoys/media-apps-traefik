@@ -487,8 +487,6 @@ services:
         condition: service_healthy
       whisparr:
         condition: service_healthy
-      lidarr:
-        condition: service_healthy
     environment:
       - TZ=${TZ}
       - UMASK=022
@@ -793,8 +791,6 @@ services:
       radarr-4k:
         condition: service_healthy
       whisparr:
-        condition: service_healthy
-      lidarr:
         condition: service_healthy
     labels:
       - traefik.enable=true
