@@ -326,14 +326,14 @@ services:
       - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.nzbget-rtr.entrypoints=https
-      - traefik.http.routers.nzbget-rtr.tls=true
-      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
-      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
-      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
-      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.nzbget-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.nzbget-rtr.middlewares=authelia@docker
+      - traefik.http.routers.nzbget.entrypoints=https
+      - traefik.http.routers.nzbget.tls=true
+      - traefik.http.routers.nzbget.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      - traefik.http.services.nzbget.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget.service=nzbget
+      - traefik.http.routers.nzbget.middlewares=rate-limit@docker
+      - traefik.http.routers.nzbget.middlewares=secure-headers@docker
+      # - traefik.http.routers.nzbget.middlewares=authelia@docker
       # ------------------------------------------------------------------------
       - traefik.http.routers.nzbget2.entrypoints=https
       - traefik.http.routers.nzbget2.tls=true
@@ -682,7 +682,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/plex:/config
       - ${DOCKER_DIR}/plex-transcode:/transcode
-      - ${DATA_DIR}/media:/data
+      - ${DATA_DIR}/media:/data/media
     image: cr.hotio.dev/hotio/plex:release
 
   # tautulli - plex monitor
@@ -1441,14 +1441,14 @@ services:
       - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.mylar3-rtr.entrypoints=https
-      - traefik.http.routers.mylar3-rtr.tls=true
-      - traefik.http.routers.mylar3-rtr.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
-      - traefik.http.services.mylar3-svc.loadbalancer.server.port=8090
-      - traefik.http.routers.mylar3-rtr.service=mylar3-svc
-      - traefik.http.routers.mylar3-rtr.middlewares=rate-limit@docker
-      - traefik.http.routers.mylar3-rtr.middlewares=secure-headers@docker
-      # - traefik.http.routers.mylar3-rtr.middlewares=authelia@docker
+      - traefik.http.routers.mylar3.entrypoints=https
+      - traefik.http.routers.mylar3.tls=true
+      - traefik.http.routers.mylar3.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
+      - traefik.http.services.mylar3.loadbalancer.server.port=8090
+      - traefik.http.routers.mylar3.service=mylar3
+      - traefik.http.routers.mylar3.middlewares=rate-limit@docker
+      - traefik.http.routers.mylar3.middlewares=secure-headers@docker
+      # - traefik.http.routers.mylar3.middlewares=authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1462,6 +1462,34 @@ services:
       - ${DATA_DIR}:/data
     # image: lscr.io/linuxserver/mylar3:nightly
     image: cr.hotio.dev/hotio/mylar3:nightly
+
+  # Autoscan replaces the default Plex and Emby behaviour for picking up file changes on the file system.
+  # Autoscan integrates with Sonarr, Radarr, Lidarr and Google Drive to fetch changes in near real-time
+  # without relying on the file system.
+  # DOCKER DOCS: https://hotio.dev/containers/autoscan/
+  # AUTOSCAN DOCS: https://github.com/cloudbox/autoscan
+  autoscan:
+    container_name: autoscan
+    hostname: autoscan
+    restart: unless-stopped
+    networks:
+      apps: {}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - ${DOCKER_DIR}/autoscan:/config
+      - ${DATA_DIR}/media:/data/media
+    image: cr.hotio.dev/hotio/autoscan
 
   #-----------------------------------------------------------------------------
   # MISC

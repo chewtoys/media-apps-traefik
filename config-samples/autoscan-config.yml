@@ -1,0 +1,64 @@
+# <- processor ->
+
+# override the minimum age to 30 minutes:
+minimum-age: 5m
+
+# <- triggers ->
+
+# Protect your webhooks with authentication
+authentication:
+  username: username
+  password: password
+
+# port for Autoscan webhooks to listen on
+port: 3030
+
+triggers:
+  lidarr:
+    - name: lidarr # /triggers/lidarr
+      priority: 3
+
+  radarr:
+    - name: radarr # /triggers/radarr
+      priority: 2
+    - name: radarr-4k # /triggers/radarr-4k
+      priority: 2
+
+  sonarr:
+    - name: sonarr # /triggers/sonarr
+      priority: 2
+    - name: sonarr-4k # /triggers/sonarr-4k
+      priority: 2
+
+      # Rewrite the path from within the container
+      # to your local filesystem.
+      # rewrite:
+      #   - from: /tv/
+      #     to: /mnt/unionfs/Media/TV/
+
+  inotify:
+    - priority: 0
+
+      # filter with regular expressions
+      include:
+        - ^/data/media/
+      exclude:
+        - '\.(srt|pgs|pdf|png|jpg|jpeg|gif|bmp|ico)$'
+
+      # rewrite inotify path to unified filesystem
+      # rewrite:
+      #       - from: ^/mnt/local/Media/
+      #         to: /mnt/unionfs/Media/
+
+      # local filesystem paths to monitor
+      paths:
+        - path: /data/media/
+# <- targets ->
+
+targets:
+  plex:
+    - url: http://plex:32400 # URL of your Plex server
+      token: [PLEX-TOKEN] # Plex API Token
+      # rewrite:
+      #   - from: /mnt/unionfs/Media/ # local file system
+      #     to: /data/ # path accessible by the Plex docker container (if applicable)
