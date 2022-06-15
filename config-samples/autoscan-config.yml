@@ -20,13 +20,13 @@ triggers:
 
   radarr:
     - name: radarr # /triggers/radarr
-      priority: 2
+      priority: 3
     - name: radarr-4k # /triggers/radarr-4k
       priority: 2
 
   sonarr:
     - name: sonarr # /triggers/sonarr
-      priority: 2
+      priority: 3
     - name: sonarr-4k # /triggers/sonarr-4k
       priority: 2
 
@@ -37,7 +37,7 @@ triggers:
       #     to: /mnt/unionfs/Media/TV/
 
   inotify:
-    - priority: 0
+    - priority: 5
 
       # filter with regular expressions
       include:
@@ -53,6 +53,7 @@ triggers:
       # local filesystem paths to monitor
       paths:
         - path: /data/media/
+
 # <- targets ->
 
 targets:
