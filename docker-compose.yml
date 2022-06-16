@@ -729,9 +729,12 @@ services:
     # image: lscr.io/linuxserver/tautulli:develop
     image: cr.hotio.dev/hotio/tautulli:testing
 
-  scheduler:
-    container_name: scheduler
-    hostname: notifiarr
+  # Ofelia is a modern and low footprint job scheduler for docker environments, built on Go.
+  # Ofelia aims to be a replacement for the old fashioned cron.
+  # DOCS: -- https://github.com/mcuadros/ofelia
+  ofelia:
+    container_name: ofelia
+    hostname: ofelia
     depends_on:
       - plextraktsync
     command: daemon --docker
@@ -748,6 +751,10 @@ services:
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     image: mcuadros/ofelia:latest
 
+  # This project adds a two-way-sync between trakt.tv and Plex Media Server.
+  # It requires a trakt.tv account but no Plex premium and no Trakt VIP subscriptions,
+  # unlike the Plex app provided by Trakt.
+  # DOCS -- https://github.com/Taxel/PlexTraktSync
   plextraktsync:
     container_name: plextraktsync
     image: ghcr.io/taxel/plextraktsync
@@ -756,6 +763,7 @@ services:
     volumes:
       - ${DOCKER_DIR}/plextraktsync:/app/config
     labels:
+      - ofelia.enabled=true
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
