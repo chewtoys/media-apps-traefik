@@ -80,14 +80,11 @@ services:
       - traefik.http.routers.traefik.tls=true
       - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.tls.certresolver=letsencrypt
-      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN_NAME}`) || Host(`traefik.${DOMAIN_NAME2}`)
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN_NAME}`)
       - traefik.http.routers.traefik.tls.domains[0].main=${DOMAIN_NAME}
       - traefik.http.routers.traefik.tls.domains[0].sans=*.${DOMAIN_NAME}
-      - traefik.http.routers.traefik.tls.domains[1].main=${DOMAIN_NAME2}
-      - traefik.http.routers.traefik.tls.domains[1].sans=*.${DOMAIN_NAME2}
       - traefik.http.routers.traefik.service=api@internal
-      - traefik.http.routers.traefik.middlewares=rate-limit@docker
-      - traefik.http.routers.traefik.middlewares=secure-headers@docker
+      - traefik.http.routers.traefik.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       - traefik.http.middlewares.rate-limit.rateLimit.average=100
       - traefik.http.middlewares.rate-limit.rateLimit.burst=50
@@ -98,11 +95,20 @@ services:
       - traefik.http.middlewares.secure-headers.headers.stsSeconds=63072000
       - traefik.http.middlewares.secure-headers.headers.contentTypeNosniff=true
       - traefik.http.middlewares.secure-headers.headers.accessControlAllowMethods=GET, POST
-      - traefik.http.middlewares.secure-headers.headers.accessControlAllowOriginList=https://${DOMAIN_NAME}, https://www.${DOMAIN_NAME}, https://${DOMAIN_NAME2}, https://www.${DOMAIN_NAME2}
+      - traefik.http.middlewares.secure-headers.headers.accessControlAllowOriginList=https://${DOMAIN_NAME}, https://www.${DOMAIN_NAME}
       - traefik.http.middlewares.secure-headers.headers.accessControlMaxAge=100
       - traefik.http.middlewares.secure-headers.headers.addVaryheader=true
       - traefik.http.middlewares.secure-headers.headers.contentSecurityPolicy=script-src 'self'
       - traefik.http.middlewares.secure-headers.headers.referrerPolicy=origin-when-cross-origin
+      # ------------------------------------------------------------------------
+      # AUTHELIA
+      # ------------------------------------------------------------------------
+      - traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://auth.${DOMAIN_NAME}/
+      - traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
+      - traefik.http.middlewares.authelia-basic.forwardauth.address=http://authelia:9091/api/verify?auth=basic
+      - traefik.http.middlewares.authelia-basic.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia-basic.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -114,6 +120,128 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DOCKER_DIR}/traefik:/config
     image: traefik:latest
+
+  # redis - session database (more performance)
+  # default run PUID is 1001 and PGID is root(0)
+  # cant seem to change it, folder permissions need to be set accordingly
+  authredis:
+    container_name: authredis
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - TZ=${TZ}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/authredis:/bitnami/redis/data
+      - ${DOCKER_DIR}/authredis/redis.conf:/opt/bitnami/redis/mounted-etc/redis.conf
+    secrets:
+      - redis
+    command: /opt/bitnami/scripts/redis/run.sh --requirepass ${REDIS_PASSWORD}
+    image: bitnami/redis:latest
+
+  # mariadb - used for authelia storage
+  authmariadb:
+    container_name: authmariadb
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=022
+      - UMASK=022
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/mysql_root_secret
+      - FILE__MYSQL_PASSWORD=/run/secrets/mysql_secret
+      - MYSQL_DATABASE=authelia
+      - MYSQL_USER=authelia
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    secrets:
+      - mysql_secret
+      - mysql_root_secret
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/authmariadb:/config
+    image: ghcr.io/linuxserver/mariadb:latest
+
+  # Authelia - Self-Hosted Single Sign-On and Two-Factor Authentication
+  # Docs: https://www.authelia.com/docs/
+  authelia:
+    container_name: authelia
+    hostname: authelia
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/authelia:/config
+    environment:
+      - TZ=${TZ}
+      - AUTHELIA_JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/local_session_secret
+      - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/mysql_secret
+      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/notifier_smtp_secret
+      - AUTHELIA_DUO_API_SECRET_KEY_FILE=/run/secrets/duo_api_secret
+      - AUTHELIA_SESSION_REDIS_PASSWORD_FILE=/run/secrets/redis_secret
+      # - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/postgres_secret
+      # - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_secret
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authelia.entrypoints=https
+      - traefik.http.routers.authelia.tls=true
+      - traefik.http.routers.authelia.rule=Host(`auth.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/auth`))
+      - traefik.http.services.authelia.loadbalancer.server.port=9091
+      - traefik.http.routers.authelia.service=authelia
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    secrets:
+      - jwt_secret
+      - local_session_secret
+      - mysql_secret
+      - notifier_smtp_secret
+      - duo_api_secret
+      - redis_secret
+      - postgres_secret
+      - ldap_secret
+    depends_on:
+      - authredis
+      - authmariadb
+      - traefik
+    image: authelia/authelia:latest
 
   # organizr - WebApp portal for bookmarks, prevents multiple tabs
   # mostly used for sonarr and the like
@@ -145,15 +273,7 @@ services:
       - traefik.http.routers.organizr.rule=Host(`www.${DOMAIN_NAME}`) || Host(`organizr.${DOMAIN_NAME}`)
       - traefik.http.services.organizr.loadbalancer.server.port=80
       - traefik.http.routers.organizr.service=organizr
-      - traefik.http.routers.organizr.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.organizr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.organizr2.entrypoints=https
-      - traefik.http.routers.organizr2.tls=true
-      - traefik.http.routers.organizr2.rule=Host(`www.${DOMAIN_NAME2}`) || Host(`organizr.${DOMAIN_NAME2}`)
-      - traefik.http.services.organizr2.loadbalancer.server.port=80
-      - traefik.http.routers.organizr2.service=organizr
-      - traefik.http.routers.organizr2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.organizr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -217,20 +337,7 @@ services:
       - traefik.http.middlewares.qb-headers.headers.customrequestheaders.Origin=
       - traefik.http.routers.qb.middlewares=qb-strip,qb-redirect,qb-headers
       - traefik.http.routers.qb.service=qb
-      - traefik.http.routers.qb.middlewares=rate-limit@docker,secure-headers@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.qb2.entrypoints=https
-      - traefik.http.routers.qb2.tls=true
-      - traefik.http.routers.qb2.rule=Host(`qb.${DOMAIN_NAME2}`) || Host(`${DOMAIN_NAME2}`) && PathPrefix(`/qb`)
-      - traefik.http.middlewares.qb2-redirect.redirectregex.regex=^(.*)/qb$$
-      - traefik.http.middlewares.qb2-redirect.redirectregex.replacement=$$1/qb/
-      - traefik.http.middlewares.qb2-strip.stripprefix.prefixes=/qb/
-      - traefik.http.middlewares.qb2-headers.headers.customrequestheaders.X-Frame-Options=
-      - traefik.http.middlewares.qb2-headers.headers.customrequestheaders.Referer=
-      - traefik.http.middlewares.qb2-headers.headers.customrequestheaders.Origin=
-      - traefik.http.routers.qb2.middlewares=qb2-strip,qb2-redirect,qb2-headers
-      - traefik.http.routers.qb2.service=qb
-      - traefik.http.routers.qb2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.qb.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -276,15 +383,7 @@ services:
       - traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sabnzbd`))
       - traefik.http.services.sabnzbd.loadbalancer.server.port=8080
       - traefik.http.routers.sabnzbd.service=sabnzbd
-      - traefik.http.routers.sabnzbd.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.sabnzbd.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.sabnzbd2.entrypoints=https
-      - traefik.http.routers.sabnzbd2.tls=true
-      - traefik.http.routers.sabnzbd2.rule=Host(`sabnzbd.${DOMAIN_NAME2}`) || (Host(`${DOMAIN_NAME2}`) && PathPrefix(`/sabnzbd`))
-      - traefik.http.routers.sabnzbd2.service=sabnzbd
-      - traefik.http.routers.sabnzbd2.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.sabnzbd2.middlewares=authelia@docker
+      - traefik.http.routers.sabnzbd.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -331,16 +430,7 @@ services:
       - traefik.http.routers.nzbget.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
       - traefik.http.services.nzbget.loadbalancer.server.port=6789
       - traefik.http.routers.nzbget.service=nzbget
-      - traefik.http.routers.nzbget.middlewares=rate-limit@docker
-      - traefik.http.routers.nzbget.middlewares=secure-headers@docker
-      # - traefik.http.routers.nzbget.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.nzbget2.entrypoints=https
-      - traefik.http.routers.nzbget2.tls=true
-      - traefik.http.routers.nzbget2.rule=Host(`nzbget.${DOMAIN_NAME2}`) || (Host(`${DOMAIN_NAME2}`) && PathPrefix(`/nzbget`))
-      - traefik.http.routers.nzbget2.service=nzbget
-      - traefik.http.routers.nzbget2.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.nzbget2.middlewares=authelia@docker
+      - traefik.http.routers.nzbget.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -387,14 +477,7 @@ services:
       - traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/prowlarr`))
       - traefik.http.services.prowlarr.loadbalancer.server.port=9696
       - traefik.http.routers.prowlarr.service=prowlarr
-      - traefik.http.routers.prowlarr.middlewares=rate-limit@docker
-      - traefik.http.routers.prowlarr.middlewares=secure-headers@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.prowlarr2.entrypoints=https
-      - traefik.http.routers.prowlarr2.tls=true
-      - traefik.http.routers.prowlarr2.rule=Host(`prowlarr.${DOMAIN_NAME2}`) || (Host(`${DOMAIN_NAME2}`) && PathPrefix(`/prowlarr`))
-      - traefik.http.routers.prowlarr2.service=prowlarr
-      - traefik.http.routers.prowlarr2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.prowlarr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -443,15 +526,7 @@ services:
       - traefik.http.routers.autobrr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
       - traefik.http.services.autobrr.loadbalancer.server.port=7474
       - traefik.http.routers.autobrr.service=autobrr
-      - traefik.http.routers.autobrr.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.autobrr.middlewares=authelia@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.autobrr2.entrypoints=https
-      - traefik.http.routers.autobrr2.tls=true
-      - traefik.http.routers.autobrr2.rule=Host(`autobrr.${DOMAIN_NAME2}`) || (Host(`${DOMAIN_NAME2}`) && PathPrefix(`/autobrr`))
-      - traefik.http.routers.autobrr2.service=autobrr
-      - traefik.http.routers.autobrr2.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.autobrr2.middlewares=authelia@docker
+      - traefik.http.routers.autobrr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -538,12 +613,6 @@ services:
       - traefik.http.routers.overseerr.service=overseerr
       - traefik.http.routers.overseerr.middlewares=rate-limit@docker,secure-headers@docker
       # ------------------------------------------------------------------------
-      - traefik.http.routers.overseerr2.entrypoints=https
-      - traefik.http.routers.overseerr2.tls=true
-      - traefik.http.routers.overseerr2.rule=Host(`overseerr.${DOMAIN_NAME2}`) ||  Host(`requests.${DOMAIN_NAME2}`)
-      - traefik.http.routers.overseerr2.service=overseerr
-      - traefik.http.routers.overseerr2.middlewares=rate-limit@docker,secure-headers@docker
-      # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
       - org.hotio.pullio.notify=true
@@ -581,12 +650,6 @@ services:
       - traefik.http.services.petio.loadbalancer.server.port=7777
       - traefik.http.routers.petio.service=petio
       - traefik.http.routers.petio.middlewares=rate-limit@docker,secure-headers@docker
-      # ------------------------------------------------------------------------
-      - traefik.http.routers.petio2.entrypoints=https
-      - traefik.http.routers.petio2.tls=true
-      - traefik.http.routers.petio2.rule=Host(`petio.${DOMAIN_NAME2}`) ||  Host(`petio.${DOMAIN_NAME2}`)
-      - traefik.http.routers.petio2.service=petio
-      - traefik.http.routers.petio2.middlewares=rate-limit@docker,secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -663,13 +726,6 @@ services:
       - traefik.http.services.plex.loadbalancer.server.port=32400
       - traefik.http.routers.plex.service=plex
       - traefik.http.routers.plex.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.plex.middlewares=authelia@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.plex2.entrypoints=https
-      - traefik.http.routers.plex2.tls=true
-      - traefik.http.routers.plex2.rule=Host(`plex.${DOMAIN_NAME2}`) ||  Host(`plex.${DOMAIN_NAME2}`)
-      - traefik.http.routers.plex2.service=plex
-      - traefik.http.routers.plex2.middlewares=rate-limit@docker,secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -710,13 +766,7 @@ services:
       - traefik.http.routers.tautulli.tls=true
       - traefik.http.routers.tautulli.rule=Host(`tautulli.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`) && PathPrefix(`/tautulli`)
       - traefik.http.routers.tautulli.service=tautulli
-      - traefik.http.routers.tautulli.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.tautulli2.entrypoints=https
-      - traefik.http.routers.tautulli2.tls=true
-      - traefik.http.routers.tautulli2.rule=Host(`tautulli.${DOMAIN_NAME2}`) ||  Host(`tautulli.${DOMAIN_NAME2}`)
-      - traefik.http.routers.tautulli2.service=tautulli
-      - traefik.http.routers.tautulli2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.tautulli.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -806,12 +856,6 @@ services:
       - traefik.http.routers.notifiarr.rule=Host(`notifiarr.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`) && PathPrefix(`/notifiarr`)
       - traefik.http.routers.notifiarr.service=notifiarr
       - traefik.http.routers.notifiarr.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.notifiarr2.entrypoints=https
-      - traefik.http.routers.notifiarr2.tls=true
-      - traefik.http.routers.notifiarr2.rule=Host(`notifiarr.${DOMAIN_NAME2}`) ||  Host(`notifiarr.${DOMAIN_NAME2}`)
-      - traefik.http.routers.notifiarr2.service=notifiarr
-      - traefik.http.routers.notifiarr2.middlewares=rate-limit@docker,secure-headers@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -851,13 +895,7 @@ services:
       - traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr`))
       - traefik.http.services.bazarr.loadbalancer.server.port=6767
       - traefik.http.routers.bazarr.service=bazarr
-      - traefik.http.routers.bazarr.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.bazarr2.entrypoints=https
-      - traefik.http.routers.bazarr2.tls=true
-      - traefik.http.routers.bazarr2.rule=Host(`bazarr.${DOMAIN_NAME2}`) ||  Host(`bazarr.${DOMAIN_NAME2}`)
-      - traefik.http.routers.bazarr2.service=bazarr
-      - traefik.http.routers.bazarr2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.bazarr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -903,14 +941,7 @@ services:
       - traefik.http.routers.bazarr-4k.rule=Host(`bazarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/bazarr-4k`))
       - traefik.http.services.bazarr-4k.loadbalancer.server.port=6767
       - traefik.http.routers.bazarr-4k.service=bazarr-4k
-      - traefik.http.routers.bazarr-4k.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.bazarr-4k.middlewares=authelia@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.bazarr-4k2.entrypoints=https
-      - traefik.http.routers.bazarr-4k2.tls=true
-      - traefik.http.routers.bazarr-4k2.rule=Host(`bazarr-4k.${DOMAIN_NAME2}`) ||  Host(`bazarr-4k.${DOMAIN_NAME2}`)
-      - traefik.http.routers.bazarr-4k2.service=bazarr-4k
-      - traefik.http.routers.bazarr-4k2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.bazarr-4k.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -959,13 +990,7 @@ services:
       - traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr`))
       - traefik.http.services.sonarr.loadbalancer.server.port=8989
       - traefik.http.routers.sonarr.service=sonarr
-      - traefik.http.routers.sonarr.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.sonarr2.entrypoints=https
-      - traefik.http.routers.sonarr2.tls=true
-      - traefik.http.routers.sonarr2.rule=Host(`sonarr.${DOMAIN_NAME2}`) ||  Host(`sonarr.${DOMAIN_NAME2}`)
-      - traefik.http.routers.sonarr2.service=sonarr
-      - traefik.http.routers.sonarr2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.sonarr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1022,14 +1047,7 @@ services:
       - traefik.http.routers.sonarr-4k.rule=Host(`sonarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/sonarr-4k`))
       - traefik.http.services.sonarr-4k.loadbalancer.server.port=8989
       - traefik.http.routers.sonarr-4k.service=sonarr-4k
-      - traefik.http.routers.sonarr-4k.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.sonarr-4k.middlewares=authelia@dockerV
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.sonarr-4k2.entrypoints=https
-      - traefik.http.routers.sonarr-4k2.tls=true
-      - traefik.http.routers.sonarr-4k2.rule=Host(`sonarr-4k.${DOMAIN_NAME2}`) ||  Host(`sonarr-4k.${DOMAIN_NAME2}`)
-      - traefik.http.routers.sonarr-4k2.service=sonarr-4k
-      - traefik.http.routers.sonarr-4k2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.sonarr-4k.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1078,13 +1096,7 @@ services:
       - traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr`))
       - traefik.http.services.radarr.loadbalancer.server.port=7878
       - traefik.http.routers.radarr.service=radarr
-      - traefik.http.routers.radarr.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.radarr2.entrypoints=https
-      - traefik.http.routers.radarr2.tls=true
-      - traefik.http.routers.radarr2.rule=Host(`radarr.${DOMAIN_NAME2}`) ||  Host(`radarr.${DOMAIN_NAME2}`)
-      - traefik.http.routers.radarr2.service=radarr
-      - traefik.http.routers.radarr2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.radarr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1138,13 +1150,7 @@ services:
       - traefik.http.routers.radarr-4k.rule=Host(`radarr-4k.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k`))
       - traefik.http.services.radarr-4k.loadbalancer.server.port=7878
       - traefik.http.routers.radarr-4k.service=radarr-4k
-      - traefik.http.routers.radarr-4k.middlewares=rate-limit@docker,secure-headers@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.radarr-4k2.entrypoints=https
-      - traefik.http.routers.radarr-4k2.tls=true
-      - traefik.http.routers.radarr-4k2.rule=Host(`radarr-4k.${DOMAIN_NAME2}`) ||  Host(`radarr-4k.${DOMAIN_NAME2}`)
-      - traefik.http.routers.radarr-4k2.service=radarr-4k
-      - traefik.http.routers.radarr-4k2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.radarr-4k.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1197,14 +1203,7 @@ services:
       - traefik.http.routers.whisparr.rule=Host(`whisparr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whisparr`))
       - traefik.http.services.whisparr.loadbalancer.server.port=6969
       - traefik.http.routers.whisparr.service=whisparr
-      - traefik.http.routers.whisparr.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.whisparr.middlewares=authelia@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.whisparr2.entrypoints=https
-      - traefik.http.routers.whisparr2.tls=true
-      - traefik.http.routers.whisparr2.rule=Host(`whisparr.${DOMAIN_NAME2}`) ||  Host(`whisparr.${DOMAIN_NAME2}`)
-      - traefik.http.routers.whisparr2.service=whisparr
-      - traefik.http.routers.whisparr2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.whisparr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1247,9 +1246,7 @@ services:
       - traefik.http.routers.mylar3.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
       - traefik.http.services.mylar3.loadbalancer.server.port=8090
       - traefik.http.routers.mylar3.service=mylar3
-      - traefik.http.routers.mylar3.middlewares=rate-limit@docker
-      - traefik.http.routers.mylar3.middlewares=secure-headers@docker
-      # - traefik.http.routers.mylar3.middlewares=authelia@docker
+      - traefik.http.routers.mylar3.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
@@ -1320,14 +1317,7 @@ services:
       - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/whoami`))
       - traefik.http.services.whoami.loadbalancer.server.port=80
       - traefik.http.routers.whoami.service=whoami
-      - traefik.http.routers.whoami.middlewares=rate-limit@docker,secure-headers@docker
-      # - traefik.http.routers.whoami.middlewares=authelia@docker
-      #-----------------------------------------------------------------------------
-      - traefik.http.routers.whoami2.entrypoints=https
-      - traefik.http.routers.whoami2.tls=true
-      - traefik.http.routers.whoami2.rule=Host(`whoami.${DOMAIN_NAME2}`) ||  Host(`whoami.${DOMAIN_NAME2}`)
-      - traefik.http.routers.whoami2.service=whoami
-      - traefik.http.routers.whoami2.middlewares=rate-limit@docker,secure-headers@docker
+      - traefik.http.routers.whoami.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
     image: traefik/whoami
 
