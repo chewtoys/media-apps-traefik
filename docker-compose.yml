@@ -1117,6 +1117,157 @@ services:
     # image: lscr.io/linuxserver/radarr:nightly
     image: cr.hotio.dev/hotio/radarr:nightly
 
+  # lidarr - Music
+  # Docs: https://hotio.dev/containers/lidarr/
+  lidarr:
+    container_name: lidarr
+    hostname: lidarr
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:8686/lidarr || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
+      - TP_THEME=${TP_THEME}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.lidarr.entrypoints=https
+      - traefik.http.routers.lidarr.tls=true
+      - traefik.http.routers.lidarr.rule=Host(`lidarr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/lidarr`))
+      - traefik.http.services.lidarr.loadbalancer.server.port=8686
+      - traefik.http.routers.lidarr.service=lidarr
+      - traefik.http.routers.lidarr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
+      - ${DOCKER_DIR}/lidarr:/config
+      - ${DATA_DIR}:/data
+      - ${DATA_DIR}/downloads/ama:/downloads-amd
+    # image: lscr.io/linuxserver/lidarr:nightly
+    image: cr.hotio.dev/hotio/lidarr:nightly
+
+  # amd - is a Lidarr companion script to automatically download music for Lidarr
+  # Docs: https://github.com/RandomNinjaAtk/docker-amd
+  amd:
+    container_name: amd
+    hostname: amd
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - AUTOSTART=true
+      - SCRIPTINTERVAL=1h
+      - DOWNLOADMODE=wanted
+      - FALLBACKSEARCH=True
+      - LIST=missing
+      - SearchType=both
+      - Concurrency=1
+      - EMBEDDED_COVER_QUALITY=80
+      - FORMAT=FLAC
+      - BITRATE=320
+      - ENABLEPOSTPROCESSING=true
+      - FORCECONVERT=false
+      - requirequality=true
+      - MatchDistance=10
+      - replaygain=true
+      - FolderPermissions=755
+      - FilePermissions=664
+      - MBRAINZMIRROR=https://musicbrainz.org
+      - MBRATELIMIT=1
+      - LidarrUrl=http://lidarr:8686/lidarr
+      - LidarrAPIkey=${LIDARR_API_KEY}
+      - ARL_TOKEN=${ARL_DEEZER_TOKEN}
+      - NOTIFYPLEX=true
+      - PLEXLIBRARYNAME=Music
+      - PLEXURL=http://plex:32400
+      - PLEXTOKEN=${PLEX_TOKEN}
+      - POSTPROCESSTHREADS=4
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/amd:/config
+      - ${DATA_DIR}/downloads/ama:/downloads-amd
+    image: randomninjaatk/amd:latest
+
+  # beets - Music tagger
+  # Docs: https://hub.docker.com/r/linuxserver/beets
+  beets:
+    container_name: beets
+    hostname: beets
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_DIR}/beets:/config
+      - ${DATA_DIR}:/data
+    image: ghcr.io/linuxserver/beets:nightly
+
   # whisparr - Adult Movies
   # Docker Image Docs: https://hotio.dev/containers/whisparr/
   # DOCS: https://wiki.servarr.com/en/whisparr
