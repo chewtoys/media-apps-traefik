@@ -149,7 +149,7 @@ services:
       - ${DOCKER_DIR}/authredis:/bitnami/redis/data
       - ${DOCKER_DIR}/authredis/redis.conf:/opt/bitnami/redis/mounted-etc/redis.conf
     secrets:
-      - redis
+      - redis_secret
     command: /opt/bitnami/scripts/redis/run.sh --requirepass ${REDIS_PASSWORD}
     image: bitnami/redis:latest
 
@@ -1260,51 +1260,6 @@ services:
       - ${DOCKER_DIR}/whisparr:/config
       - ${DATA_DIR}:/data
     image: cr.hotio.dev/hotio/whisparr:nightly
-
-  # mylar3 - Comics
-  # Docs: https://hotio.dev/containers/mylar3/
-  mylar3:
-    container_name: mylar3
-    hostname: mylar3
-    restart: unless-stopped
-    networks:
-      apps: {}
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    depends_on:
-      sabnzbd:
-        condition: service_healthy
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:mylar3
-      - TP_THEME=${TP_THEME}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.mylar3.entrypoints=https
-      - traefik.http.routers.mylar3.tls=true
-      - traefik.http.routers.mylar3.rule=Host(`mylar3.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/mylar3`))
-      - traefik.http.services.mylar3.loadbalancer.server.port=8090
-      - traefik.http.routers.mylar3.service=mylar3
-      - traefik.http.routers.mylar3.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-      # ------------------------------------------------------------------------
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/mylar3:/config
-      - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/mylar3:nightly
-    image: cr.hotio.dev/hotio/mylar3:nightly
 
   # Autoscan replaces the default Plex behaviour for picking up file changes on the file system.
   # Autoscan integrates with Sonarr, Radarr, Lidarr and Google Drive to fetch changes in near real-time
