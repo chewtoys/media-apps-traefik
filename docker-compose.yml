@@ -1255,6 +1255,13 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     labels:
+      - traefik.enable=true
+      - traefik.http.routers.beets.entrypoints=https
+      - traefik.http.routers.beets.tls=true
+      - traefik.http.routers.beets.rule=Host(`beets.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/beets`))
+      - traefik.http.services.beets.loadbalancer.server.port=8337
+      - traefik.http.routers.beets.service=beets
+      - traefik.http.routers.beets.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
