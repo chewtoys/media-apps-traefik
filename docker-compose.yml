@@ -1286,18 +1286,24 @@ services:
       retries: 5
       start_period: 20s
       timeout: 10s
-    depends_on:
-      sabnzbd:
-        condition: service_healthy
-      qb:
-        condition: service_healthy
     environment:
       - TZ=${TZ}
       - UMASK=022
       - PUID=${PUID}
       - PGID=${PGID}
-      - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
-      - TP_THEME=${TP_THEME}
+      - autoStart=true
+      - configureLidarrWithOptimalSettings=true
+      - audioFormat=native
+      - audioBitrate=lossless
+      - audioLyricType=both
+      - dlClientSource=both
+      - arlToken=${ARL_DEEZER_TOKEN}
+      - tidalCountryCode=US
+      - addDeezerTopArtists=true
+      - addDeezerTopAlbumArtists=false
+      - addDeezerTopTrackArtists=false
+      - topLimit=25
+      - addRelatedArtists=false
     labels:
       - traefik.enable=true
       - traefik.http.routers.lidarr.entrypoints=https
@@ -1314,55 +1320,15 @@ services:
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${DOCKER_DIR}/lidarr/90-config:/etc/cont-init.d/90-config
       - ${DOCKER_DIR}/lidarr:/config
-      - ${DATA_DIR}:/data
-      - ${DATA_DIR}/downloads/ama:/downloads-amd
+      - ${DATA_DIR}/downloads/music:/downloads
+      - ${DATA_DIR}/media/music:/music
+      - ${DATA_DIR}/media/music-videos:/music-videos
+      - ${DATA_DIR}/media/music:/data/media/music
+      - ${DATA_DIR}/downloads/music:/data/downloads/music
     # image: lscr.io/linuxserver/lidarr:nightly
-    image: cr.hotio.dev/hotio/lidarr:nightly
-
-  # beets - Music tagger
-  # Docs: https://hub.docker.com/r/linuxserver/beets
-  beets:
-    container_name: beets
-    hostname: beets
-    restart: unless-stopped
-    networks:
-      apps: {}
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    depends_on:
-      lidarr:
-        condition: service_healthy
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.beets.entrypoints=https
-      - traefik.http.routers.beets.tls=true
-      - traefik.http.routers.beets.rule=Host(`beets.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/beets`))
-      - traefik.http.services.beets.loadbalancer.server.port=8337
-      - traefik.http.routers.beets.service=beets
-      - traefik.http.routers.beets.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${DOCKER_DIR}/beets:/config
-      - ${DATA_DIR}:/data
-    image: ghcr.io/linuxserver/beets:nightly
+    # image: cr.hotio.dev/hotio/lidarr:nightly
+    image: randomninjaatk/lidarr-extended
 
   # whisparr - Adult Movies
   # Docker Image Docs: https://hotio.dev/containers/whisparr/
