@@ -1051,6 +1051,222 @@ services:
     # image: lscr.io/linuxserver/radarr:nightly
     image: cr.hotio.dev/hotio/radarr:nightly
 
+  # radarr - Movies
+  # Docker Image Docs: https://hotio.dev/containers/radarr/
+  # DOCS: https://wiki.servarr.com/en/radarr
+  radarr-4k-br:
+    container_name: radarr-4k-br
+    hostname: radarr-4k-br
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:7878/radarr-4k-br || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${TP_THEME}
+      - TP_ADDON=radarr-4k-logo
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr-4k-br.entrypoints=https
+      - traefik.http.routers.radarr-4k-br.tls=true
+      - traefik.http.routers.radarr-4k-br.rule=Host(`radarr-4k-br.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k-br`))
+      - traefik.http.services.radarr-4k-br.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr-4k-br.service=radarr-4k-br
+      - traefik.http.routers.radarr-4k-br.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/radarr-4k-br:/config
+      - ${DATA_DIR}:/data
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
+
+  # radarr - Movies
+  # Docker Image Docs: https://hotio.dev/containers/radarr/
+  # DOCS: https://wiki.servarr.com/en/radarr
+  radarr-4k-web:
+    container_name: radarr-4k-web
+    hostname: radarr-4k-web
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:7878/radarr-4k-web || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${TP_THEME}
+      - TP_ADDON=radarr-4k-logo
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr-4k-web.entrypoints=https
+      - traefik.http.routers.radarr-4k-web.tls=true
+      - traefik.http.routers.radarr-4k-web.rule=Host(`radarr-4k-web.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-4k-web`))
+      - traefik.http.services.radarr-4k-web.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr-4k-web.service=radarr-4k-web
+      - traefik.http.routers.radarr-4k-web.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/radarr-4k-web:/config
+      - ${DATA_DIR}:/data
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
+
+  # radarr - Movies
+  # Docker Image Docs: https://hotio.dev/containers/radarr/
+  # DOCS: https://wiki.servarr.com/en/radarr
+  radarr-hd-br:
+    container_name: radarr-hd-br
+    hostname: radarr-hd-br
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:7878/radarr-hd-br || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${TP_THEME}
+      - TP_ADDON=radarr-4k-logo
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr-hd-br.entrypoints=https
+      - traefik.http.routers.radarr-hd-br.tls=true
+      - traefik.http.routers.radarr-hd-br.rule=Host(`radarr-hd-br.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-hd-br`))
+      - traefik.http.services.radarr-hd-br.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr-hd-br.service=radarr-hd-br
+      - traefik.http.routers.radarr-hd-br.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/radarr-hd-br:/config
+      - ${DATA_DIR}:/data
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
+
+  # radarr - Movies
+  # Docker Image Docs: https://hotio.dev/containers/radarr/
+  # DOCS: https://wiki.servarr.com/en/radarr
+  radarr-hd-web:
+    container_name: radarr-hd-web
+    hostname: radarr-hd-web
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:7878/radarr-hd-web || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qb:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
+      - TP_THEME=${TP_THEME}
+      - TP_ADDON=radarr-4k-logo
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr-hd-web.entrypoints=https
+      - traefik.http.routers.radarr-hd-web.tls=true
+      - traefik.http.routers.radarr-hd-web.rule=Host(`radarr-hd-web.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/radarr-hd-web`))
+      - traefik.http.services.radarr-hd-web.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr-hd-web.service=radarr-hd-web
+      - traefik.http.routers.radarr-hd-web.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/radarr-hd-web:/config
+      - ${DATA_DIR}:/data
+    # image: lscr.io/linuxserver/radarr:nightly
+    image: cr.hotio.dev/hotio/radarr:nightly
+
   # lidarr - Music
   # Docs: https://hotio.dev/containers/lidarr/
   lidarr:
@@ -1105,67 +1321,6 @@ services:
       - ${DATA_DIR}/downloads/ama:/downloads-amd
     # image: lscr.io/linuxserver/lidarr:nightly
     image: cr.hotio.dev/hotio/lidarr:nightly
-
-  # amd - is a Lidarr companion script to automatically download music for Lidarr
-  # Docs: https://github.com/RandomNinjaAtk/docker-amd
-  amd:
-    container_name: amd
-    hostname: amd
-    restart: unless-stopped
-    networks:
-      apps: {}
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    depends_on:
-      lidarr:
-        condition: service_healthy
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - AUTOSTART=true
-      - SCRIPTINTERVAL=1h
-      - DOWNLOADMODE=wanted
-      - FALLBACKSEARCH=True
-      - LIST=missing
-      - SearchType=both
-      - Concurrency=1
-      - EMBEDDED_COVER_QUALITY=80
-      - FORMAT=FLAC
-      - BITRATE=320
-      - ENABLEPOSTPROCESSING=true
-      - FORCECONVERT=false
-      - requirequality=true
-      - MatchDistance=10
-      - replaygain=true
-      - FolderPermissions=755
-      - FilePermissions=664
-      - MBRAINZMIRROR=https://musicbrainz.org
-      - MBRATELIMIT=1
-      - LidarrUrl=http://lidarr:8686/lidarr
-      - LidarrAPIkey=${LIDARR_API_KEY}
-      - ARL_TOKEN=${ARL_DEEZER_TOKEN}
-      - NOTIFYPLEX=true
-      - PLEXLIBRARYNAME=Music
-      - PLEXURL=http://plex:32400
-      - PLEXTOKEN=${PLEX_TOKEN}
-      - POSTPROCESSTHREADS=4
-    labels:
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_DIR}/amd:/config
-      - ${DATA_DIR}/downloads/ama:/downloads-amd
-    image: randomninjaatk/amd:latest
 
   # beets - Music tagger
   # Docs: https://hub.docker.com/r/linuxserver/beets
