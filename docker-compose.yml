@@ -71,6 +71,10 @@ services:
       # must use manual resolvers when using docker-compose otherwise validation fails
       - --certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
       # ------------------------------------------------------------------------
+      - --serversTransport.maxIdleConnsPerHost=10
+      - --serversTransport.forwardingTimeouts.dialTimeout=0
+      - --serversTransport.forwardingTimeouts.responseHeaderTimeout=0
+      - --serversTransport.forwardingTimeouts.idleConnTimeout=0
     labels:
       - traefik.enable=true
       - traefik.http.routers.http-catchall.entrypoints=https
@@ -1300,9 +1304,9 @@ services:
       - arlToken=${ARL_DEEZER_TOKEN}
       - tidalCountryCode=US
       - addDeezerTopArtists=true
-      - addDeezerTopAlbumArtists=false
-      - addDeezerTopTrackArtists=false
-      - topLimit=25
+      - addDeezerTopAlbumArtists=true
+      - addDeezerTopTrackArtists=true
+      - topLimit=100
       - addRelatedArtists=false
     labels:
       - traefik.enable=true
