@@ -1308,6 +1308,8 @@ services:
       - addDeezerTopTrackArtists=true
       - topLimit=100
       - addRelatedArtists=false
+      - plexUrl=http://plex:32400
+      - plexToken=${PLEX_TOKEN}
     labels:
       - traefik.enable=true
       - traefik.http.routers.lidarr.entrypoints=https
