@@ -1169,8 +1169,6 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
-    ports:
-      - 7878:7878
     logging:
       driver: json-file
       options:
