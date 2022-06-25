@@ -440,8 +440,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/prowlarr:/config
-    # image: lscr.io/linuxserver/prowlarr:nightly
-    image: cr.hotio.dev/hotio/prowlarr:nightly
+    image: lscr.io/linuxserver/prowlarr:nightly
+    # image: cr.hotio.dev/hotio/prowlarr:nightly
 
   # DOCS: https://autobrr.com/getting-started/docker
   autobrr:
@@ -572,8 +572,8 @@ services:
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    # image: lscr.io/linuxserver/overseerr:develop
-    image: cr.hotio.dev/hotio/overseerr:nightly
+    image: lscr.io/linuxserver/overseerr:develop
+    # image: cr.hotio.dev/hotio/overseerr:nightly
 
   # plex - media server
   # Docker Image Docs: https://hotio.dev/containers/plex/
@@ -664,8 +664,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/tautulli:/config
-    # image: lscr.io/linuxserver/tautulli:develop
-    image: cr.hotio.dev/hotio/tautulli:testing
+    image: lscr.io/linuxserver/tautulli:develop
+    # image: cr.hotio.dev/hotio/tautulli:testing
 
   # Ofelia is a modern and low footprint job scheduler for docker environments, built on Go.
   # Ofelia aims to be a replacement for the old fashioned cron.
