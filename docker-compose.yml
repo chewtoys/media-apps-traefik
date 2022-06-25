@@ -794,8 +794,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/bazarr:/config
       - ${DATA_DIR}/media:/data
-    # image: lscr.io/linuxserver/bazarr:development
-    image: cr.hotio.dev/hotio/bazarr:nightly
+    image: lscr.io/linuxserver/bazarr:development
+    # image: cr.hotio.dev/hotio/bazarr:nightly
 
   # bazarr - automatic download subtitles
   # Docs: https://hotio.dev/containers/bazarr/
@@ -836,8 +836,8 @@ services:
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    # image: lscr.io/linuxserver/bazarr:development
-    image: cr.hotio.dev/hotio/bazarr:nightly
+    image: lscr.io/linuxserver/bazarr:development
+    # image: cr.hotio.dev/hotio/bazarr:nightly
 
   # sonarr - TV Shows
   # Docker Image Docs: https://hotio.dev/containers/sonarr/
@@ -889,8 +889,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/sonarr:develop
-    image: cr.hotio.dev/hotio/sonarr:nightly
+    image: lscr.io/linuxserver/sonarr:develop
+    # image: cr.hotio.dev/hotio/sonarr:nightly
 
   # sonarr - TV Shows
   # Docs: https://hotio.dev/containers/sonarr/
@@ -942,8 +942,8 @@ services:
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    # image: lscr.io/linuxserver/sonarr:develop
-    image: cr.hotio.dev/hotio/sonarr:nightly
+    image: lscr.io/linuxserver/sonarr:develop
+    # image: cr.hotio.dev/hotio/sonarr:nightly
 
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
@@ -995,8 +995,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
+    image: lscr.io/linuxserver/radarr:nightly
+    # image: cr.hotio.dev/hotio/radarr:nightly
 
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
@@ -1030,7 +1030,6 @@ services:
       - PGID=${PGID}
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
       - TP_THEME=${TP_THEME}
-      - TP_ADDON=radarr-4k-logo
     labels:
       - traefik.enable=true
       - traefik.http.routers.radarr-hd-br.entrypoints=https
@@ -1049,8 +1048,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-hd-br:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
+    image: lscr.io/linuxserver/radarr:nightly
+    # image: cr.hotio.dev/hotio/radarr:nightly
 
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
@@ -1084,7 +1083,6 @@ services:
       - PGID=${PGID}
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:radarr
       - TP_THEME=${TP_THEME}
-      - TP_ADDON=radarr-4k-logo
     labels:
       - traefik.enable=true
       - traefik.http.routers.radarr-hd-web.entrypoints=https
@@ -1103,8 +1101,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-hd-web:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
+    image: lscr.io/linuxserver/radarr:nightly
+    # image: cr.hotio.dev/hotio/radarr:nightly
 
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
@@ -1157,8 +1155,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
+    image: lscr.io/linuxserver/radarr:nightly
+    # image: cr.hotio.dev/hotio/radarr:nightly
 
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
@@ -1211,8 +1209,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k-br:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
+    image: lscr.io/linuxserver/radarr:nightly
+    # image: cr.hotio.dev/hotio/radarr:nightly
 
   # radarr - Movies
   # Docker Image Docs: https://hotio.dev/containers/radarr/
@@ -1265,8 +1263,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr-4k-web:/config
       - ${DATA_DIR}:/data
-    # image: lscr.io/linuxserver/radarr:nightly
-    image: cr.hotio.dev/hotio/radarr:nightly
+    image: lscr.io/linuxserver/radarr:nightly
+    # image: cr.hotio.dev/hotio/radarr:nightly
 
   # lidarr - Music
   # Docs: https://hotio.dev/containers/lidarr/
@@ -1307,6 +1305,8 @@ services:
       - addRelatedArtists=false
       - plexUrl=http://plex:32400
       - plexToken=${PLEX_TOKEN}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
+      - TP_THEME=${TP_THEME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.lidarr.entrypoints=https
