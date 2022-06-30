@@ -443,50 +443,44 @@ services:
     image: lscr.io/linuxserver/prowlarr:nightly
     # image: cr.hotio.dev/hotio/prowlarr:nightly
 
-  # DOCS: https://autobrr.com/getting-started/docker
-  autobrr:
-    container_name: autobrr
-    hostname: autobrr
-    restart: unless-stopped
-    networks:
-      apps: {}
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    depends_on:
-      sonarr:
-        condition: service_healthy
-      sonarr-4k:
-        condition: service_healthy
-      radarr:
-        condition: service_healthy
-      radarr-4k:
-        condition: service_healthy
-      whisparr:
-        condition: service_healthy
-    volumes:
-      - ${DOCKER_DIR}/autobrr:/config
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.autobrr.entrypoints=https
-      - traefik.http.routers.autobrr.tls=true
-      - traefik.http.routers.autobrr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
-      - traefik.http.services.autobrr.loadbalancer.server.port=7474
-      - traefik.http.routers.autobrr.service=autobrr
-      - traefik.http.routers.autobrr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    image: ghcr.io/autobrr/autobrr
+  # # DOCS: https://autobrr.com/getting-started/docker
+  # autobrr:
+  #   container_name: autobrr
+  #   hostname: autobrr
+  #   restart: unless-stopped
+  #   networks:
+  #     apps: {}
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-file: ${DOCKERLOGGING_MAXFILE}
+  #       max-size: ${DOCKERLOGGING_MAXSIZE}
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #   depends_on:
+  #     sonarr:
+  #       condition: service_healthy
+  #     radarr:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ${DOCKER_DIR}/autobrr:/config
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.autobrr.entrypoints=https
+  #     - traefik.http.routers.autobrr.tls=true
+  #     - traefik.http.routers.autobrr.rule=Host(`autobrr.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/autobrr`))
+  #     - traefik.http.services.autobrr.loadbalancer.server.port=7474
+  #     - traefik.http.routers.autobrr.service=autobrr
+  #     - traefik.http.routers.autobrr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+  #     # ------------------------------------------------------------------------
+  #     # PULLIO
+  #     # ------------------------------------------------------------------------
+  #     - org.hotio.pullio.notify=true
+  #     - org.hotio.pullio.update=true
+  #     - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+  #   image: ghcr.io/autobrr/autobrr
 
   # unpackerr - This application runs as a daemon on your download host. It checks for completed
   # Downloads and extracts them so Radarr and/or Sonarr and/or Lidarr may import them.
@@ -728,13 +722,7 @@ services:
     depends_on:
       sonarr:
         condition: service_healthy
-      sonarr-4k:
-        condition: service_healthy
       radarr:
-        condition: service_healthy
-      radarr-4k:
-        condition: service_healthy
-      whisparr:
         condition: service_healthy
     labels:
       - traefik.enable=true
@@ -1110,14 +1098,14 @@ services:
       - audioFormat=native
       - audioBitrate=lossless
       - audioLyricType=both
-      - dlClientSource=both
+      - dlClientSource=deezer
       - arlToken=${ARL_DEEZER_TOKEN}
       - tidalCountryCode=US
       - addDeezerTopArtists=false
       - addDeezerTopAlbumArtists=false
       - addDeezerTopTrackArtists=false
       - topLimit=100
-      - addRelatedArtists=yes
+      - addRelatedArtists=false
       - plexUrl=http://plex:32400
       - plexToken=${PLEX_TOKEN}
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
