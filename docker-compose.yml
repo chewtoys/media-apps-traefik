@@ -397,6 +397,52 @@ services:
     # image: lscr.io/linuxserver/sabnzbd:latest
     image: cr.hotio.dev/hotio/sabnzbd:release
 
+    # nzbget - usenet downloader written in C++ (easynews)
+  # Docs: https://hotio.dev/containers/nzbget/
+  nzbget:
+    container_name: nzbget
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    healthcheck:
+      test: curl --fail http://localhost:6789 || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:nzbget
+      - TP_THEME=${TP_THEME}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nzbget-rtr.entrypoints=https
+      - traefik.http.routers.nzbget-rtr.tls=true
+      - traefik.http.routers.nzbget-rtr.rule=Host(`nzbget.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nzbget`))
+      - traefik.http.services.nzbget-svc.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget-rtr.service=nzbget-svc
+      - traefik.http.routers.nzbget-rtr.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/nzbget:/config
+      - ${DATA_DIR}/usenet:/data/usenet
+    image: lscr.io/linuxserver/nzbget:testing
+    # image: cr.hotio.dev/hotio/nzbget:testing
+
   # prowlarr - usenet and torsnab indexer proxy
   # Docker Image Docs: hhttps://hotio.dev/containers/prowlarr/
   # DOCS: https://wiki.servarr.com/prowlarr
