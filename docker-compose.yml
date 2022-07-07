@@ -566,6 +566,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
       - ${DATA_DIR}/torrents:/data/torrents
+      - ${DATA_DIR}/usenet:/data/usenet
     image: cr.hotio.dev/hotio/unpackerr:testing
 
   # #-----------------------------------------------------------------------------
