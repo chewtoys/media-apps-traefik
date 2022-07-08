@@ -710,47 +710,47 @@ services:
     image: lscr.io/linuxserver/tautulli:develop
     # image: cr.hotio.dev/hotio/tautulli:testing
 
-  # Ofelia is a modern and low footprint job scheduler for docker environments, built on Go.
-  # Ofelia aims to be a replacement for the old fashioned cron.
-  # DOCS: -- https://github.com/mcuadros/ofelia
-  ofelia:
-    container_name: ofelia
-    hostname: ofelia
-    depends_on:
-      - plextraktsync
-    command: daemon --docker
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      - ofelia.job-run.plextraktsync.schedule="@every 6h"
-      - ofelia.job-run.plextraktsync.container="plextraktsync"
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    image: mcuadros/ofelia:latest
+  # # Ofelia is a modern and low footprint job scheduler for docker environments, built on Go.
+  # # Ofelia aims to be a replacement for the old fashioned cron.
+  # # DOCS: -- https://github.com/mcuadros/ofelia
+  # ofelia:
+  #   container_name: ofelia
+  #   hostname: ofelia
+  #   depends_on:
+  #     - plextraktsync
+  #   command: daemon --docker
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   labels:
+  #     - ofelia.job-run.plextraktsync.schedule="@every 6h"
+  #     - ofelia.job-run.plextraktsync.container="plextraktsync"
+  #     # ------------------------------------------------------------------------
+  #     # PULLIO
+  #     # ------------------------------------------------------------------------
+  #     - org.hotio.pullio.notify=true
+  #     - org.hotio.pullio.update=true
+  #     - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+  #   image: mcuadros/ofelia:latest
 
-  # This project adds a two-way-sync between trakt.tv and Plex Media Server.
-  # It requires a trakt.tv account but no Plex premium and no Trakt VIP subscriptions,
-  # unlike the Plex app provided by Trakt.
-  # DOCS -- https://github.com/Taxel/PlexTraktSync
-  plextraktsync:
-    container_name: plextraktsync
-    image: ghcr.io/taxel/plextraktsync
-    networks:
-      apps: {}
-    volumes:
-      - ${DOCKER_DIR}/plextraktsync:/app/config
-    labels:
-      - ofelia.enabled=true
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+  # # This project adds a two-way-sync between trakt.tv and Plex Media Server.
+  # # It requires a trakt.tv account but no Plex premium and no Trakt VIP subscriptions,
+  # # unlike the Plex app provided by Trakt.
+  # # DOCS -- https://github.com/Taxel/PlexTraktSync
+  # plextraktsync:
+  #   container_name: plextraktsync
+  #   image: ghcr.io/taxel/plextraktsync
+  #   networks:
+  #     apps: {}
+  #   volumes:
+  #     - ${DOCKER_DIR}/plextraktsync:/app/config
+  #   labels:
+  #     - ofelia.enabled=true
+  #     # ------------------------------------------------------------------------
+  #     # PULLIO
+  #     # ------------------------------------------------------------------------
+  #     - org.hotio.pullio.notify=true
+  #     - org.hotio.pullio.update=true
+  #     - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
 
   notifiarr:
     container_name: notifiarr
