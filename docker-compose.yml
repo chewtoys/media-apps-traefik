@@ -1006,6 +1006,9 @@ services:
       - addDeezerTopTrackArtists=false
       - topLimit=100
       - addRelatedArtists=false
+      - numberOfRelatedArtistsToAddPerArtist=5
+      - beetsMatchPercentage=80
+      - searchSort=album
       - plexUrl=http://plex:32400
       - plexToken=${PLEX_TOKEN}
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
