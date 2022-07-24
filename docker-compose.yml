@@ -998,7 +998,7 @@ services:
       - audioFormat=native
       - audioBitrate=lossless
       - audioLyricType=both
-      - dlClientSource=both
+      - dlClientSource=deezer
       - arlToken=${ARL_DEEZER_TOKEN}
       - tidalCountryCode=US
       - addDeezerTopArtists=false
