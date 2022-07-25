@@ -347,7 +347,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
-      - ${DATA_DIR}/torrents:/data/torrents
+      - ${DOWNLOADS_DIR}:/data/downloads
     devices:
       - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
@@ -393,7 +393,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sabnzbd:/config
-      - ${DATA_DIR}/usenet:/data/usenet
+      - ${DOWNLOADS_DIR}:/data/downloads
     # image: lscr.io/linuxserver/sabnzbd:latest
     image: cr.hotio.dev/hotio/sabnzbd:release
 
@@ -439,7 +439,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/nzbget:/config
-      - ${DATA_DIR}/usenet:/data/usenet
+      - ${DOWNLOADS_DIR}:/data/downloads
     image: lscr.io/linuxserver/nzbget:testing
     # image: cr.hotio.dev/hotio/nzbget:testing
 
@@ -486,6 +486,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/prowlarr:/config
+      - ${DOWNLOADS_DIR}:/data/downloads
     image: lscr.io/linuxserver/prowlarr:nightly
     # image: cr.hotio.dev/hotio/prowlarr:nightly
 
@@ -565,8 +566,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/unpackerr:/config
-      - ${DATA_DIR}/torrents:/data/torrents
-      - ${DATA_DIR}/usenet:/data/usenet
+      - ${DOWNLOADS_DIR}:/data/downloads
     image: cr.hotio.dev/hotio/unpackerr:testing
 
   # #-----------------------------------------------------------------------------
@@ -912,6 +912,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/sonarr:/config
       - ${DATA_DIR}:/data
+      - ${DOWNLOADS_DIR}:/data/downloads
     image: lscr.io/linuxserver/sonarr:develop
     # image: cr.hotio.dev/hotio/sonarr:nightly
 
@@ -965,6 +966,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/radarr:/config
       - ${DATA_DIR}:/data
+      - ${DOWNLOADS_DIR}:/data/downloads
     image: lscr.io/linuxserver/radarr:nightly
     # image: cr.hotio.dev/hotio/radarr:nightly
 
@@ -1032,9 +1034,8 @@ services:
       - ${DOCKER_DIR}/lidarr:/config
       - ${DATA_DIR}/media/music:/data/media/music
       - ${DATA_DIR}/media/music-videos:/music-videos
-      - ${DATA_DIR}/other-downloads:/downloads
-      - ${DATA_DIR}/usenet:/data/usenet
-      - ${DATA_DIR}/torrents:/data/torrents
+      - ${DOWNLOADS_DIR}/other-downloads:/downloads
+      - ${DOWNLOADS_DIR}:/data/downloads
     # image: lscr.io/linuxserver/lidarr:nightly
     # image: cr.hotio.dev/hotio/lidarr:nightly
     image: randomninjaatk/lidarr-extended
@@ -1089,35 +1090,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/whisparr:/config
       - ${DATA_DIR}:/data
+      - ${DOWNLOADS_DIR}:/data/downloads
     image: cr.hotio.dev/hotio/whisparr:nightly
-
-  # Autoscan replaces the default Plex behaviour for picking up file changes on the file system.
-  # Autoscan integrates with Sonarr, Radarr, Lidarr and Google Drive to fetch changes in near real-time
-  # without relying on the file system.
-  # DOCKER DOCS: https://hotio.dev/containers/autoscan/
-  # AUTOSCAN DOCS: https://github.com/cloudbox/autoscan
-  autoscan:
-    container_name: autoscan
-    hostname: autoscan
-    restart: unless-stopped
-    networks:
-      apps: {}
-    environment:
-      - TZ=${TZ}
-      - UMASK=022
-      - PUID=${PUID}
-      - PGID=${PGID}
-    labels:
-      # ------------------------------------------------------------------------
-      # PULLIO
-      # ------------------------------------------------------------------------
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
-    volumes:
-      - ${DOCKER_DIR}/autoscan:/config
-      - ${DATA_DIR}/media:/data/media:ro
-    image: cr.hotio.dev/hotio/autoscan
 
   #-----------------------------------------------------------------------------
   # MISC
