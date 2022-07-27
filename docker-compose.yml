@@ -670,6 +670,29 @@ services:
       - ${DATA_DIR}/media:/data/media
     image: cr.hotio.dev/hotio/plex:release
 
+  # Autoscan replaces the default Plex behaviour for picking up file changes on the file system.
+  # Autoscan integrates with Sonarr, Radarr, Lidarr and Google Drive to fetch changes in near real-time
+  # without relying on the file system.
+  # DOCKER DOCS: https://hotio.dev/containers/autoscan/
+  # AUTOSCAN DOCS: https://github.com/cloudbox/autoscan
+  autoscan:
+    container_name: autoscan
+    hostname: autoscan
+    restart: unless-stopped
+    networks:
+      apps: {}
+    ports:
+      - 3030:3030
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - ${DOCKER_DIR}/autoscan:/config
+      - ${DATA_DIR}/media:/data/media:ro
+    image: cr.hotio.dev/hotio/autoscan
+
   # tautulli - plex monitor
   # Docker Image Docs: https://hotio.dev/containers/tautulli/
   tautulli:
