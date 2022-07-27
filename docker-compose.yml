@@ -348,6 +348,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
       - ${DOWNLOADS_DIR}:/data/downloads
+    devices:
+      - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
 
   # sabnzbd - usenet downloader written in python (easynews)
@@ -609,28 +611,64 @@ services:
     image: lscr.io/linuxserver/overseerr:develop
     # image: cr.hotio.dev/hotio/overseerr:nightly
 
-  # Autoscan replaces the default Plex behaviour for picking up file changes on the file system.
-  # Autoscan integrates with Sonarr, Radarr, Lidarr and Google Drive to fetch changes in near real-time
-  # without relying on the file system.
-  # DOCKER DOCS: https://hotio.dev/containers/autoscan/
-  # AUTOSCAN DOCS: https://github.com/cloudbox/autoscan
-  autoscan:
-    container_name: autoscan
-    hostname: autoscan
+  # plex - media server
+  # Docker Image Docs: https://hotio.dev/containers/plex/
+  plex:
+    container_name: plex
+    hostname: plex
     restart: unless-stopped
     networks:
       apps: {}
     ports:
-      - 3030:3030
+      - 32400:32400/tcp
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     environment:
       - TZ=${TZ}
-      - UMASK=022
+      - PLEX_UID=${PUID}
+      - PLEX_GID=${PGID}
       - PUID=${PUID}
       - PGID=${PGID}
+      - DEBUG=no
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_PASS=yes
+      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      #-------------------------------------------------------------------------
+      # If you have an nvidia GPU
+      #-------------------------------------------------------------------------
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      #-------------------------------------------------------------------------
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.plex.entrypoints=https
+      - traefik.http.routers.plex.tls=true
+      - traefik.http.routers.plex.rule=Host(`plex.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/plex`))
+      - traefik.http.services.plex.loadbalancer.server.port=32400
+      - traefik.http.routers.plex.service=plex
+      - traefik.http.routers.plex.middlewares=rate-limit@docker,secure-headers@docker
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     volumes:
-      - ${DOCKER_DIR}/autoscan:/config
-      - ${DATA_DIR}/media:/data/media:ro
-    image: cr.hotio.dev/hotio/autoscan
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/plex:/config
+      - ${DOCKER_DIR}/plex-transcode:/transcode
+      - ${DATA_DIR}/media:/data/media
+    image: cr.hotio.dev/hotio/plex:release
 
   # tautulli - plex monitor
   # Docker Image Docs: https://hotio.dev/containers/tautulli/
@@ -720,8 +758,6 @@ services:
     restart: unless-stopped
     networks:
       apps: {}
-    ports:
-      - 5454:5454
     logging:
       driver: json-file
       options:
