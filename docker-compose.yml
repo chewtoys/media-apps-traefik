@@ -348,8 +348,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/qbittorrent:/config
       - ${DOWNLOADS_DIR}:/data/downloads
-    devices:
-      - /dev/net/tun
     image: cr.hotio.dev/hotio/qbittorrent
 
   # sabnzbd - usenet downloader written in python (easynews)
