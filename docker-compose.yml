@@ -988,11 +988,17 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - autoStart=true
+      - scriptInterval=15m
+      - enableAudioScript=true
+      - enableVideoScript=true
       - configureLidarrWithOptimalSettings=true
       - audioFormat=native
       - audioBitrate=lossless
+      - requireQuality=true
       - audioLyricType=both
       - dlClientSource=deezer
+      - enableBeetsTagging=true
+      - enableReplaygainTags=true
       - arlToken=${ARL_DEEZER_TOKEN}
       - tidalCountryCode=US
       - addDeezerTopArtists=false
@@ -1003,6 +1009,7 @@ services:
       - numberOfRelatedArtistsToAddPerArtist=5
       - beetsMatchPercentage=80
       - searchSort=album
+      - youtubeSubtitleLanguage=en
       - plexUrl=http://plex:32400
       - plexToken=${PLEX_TOKEN}
       - DOCKER_MODS=ghcr.io/gilbn/theme.park:lidarr
