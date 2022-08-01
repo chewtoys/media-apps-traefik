@@ -1100,6 +1100,8 @@ services:
         max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
     volumes:
       - /etc/localtime:/etc/localtime:ro
     labels:
@@ -1112,6 +1114,84 @@ services:
       - traefik.http.routers.whoami.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
       # ------------------------------------------------------------------------
     image: traefik/whoami
+
+  # mariadb - used for authelia storage
+  nextcloud-db:
+    container_name: nextcloud-db
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=0022
+      - UMASK=022
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/mysql_root_secret
+      - FILE__MYSQL_PASSWORD=/run/secrets/mysql_secret
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    secrets:
+      - mysql_secret
+      - mysql_root_secret
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/nextcloud-db:/config
+    image: ghcr.io/linuxserver/mariadb:latest
+
+  # whoami - simple service that returns PC information from where it was accessed.
+  # this is being used to keep apex domain alive
+  nextcloud:
+    container_name: nextcloud
+    hostname: nextcloud
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=022
+      - UMASK=022
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/nextcloud:/config
+      - ${DATA_DIR}/nextcloud-data:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nextcloud.entrypoints=https
+      - traefik.http.routers.nextcloud.tls=true
+      - traefik.http.routers.nextcloud.rule=Host(`nextcloud.${DOMAIN_NAME}`) || (Host(`${DOMAIN_NAME}`) && PathPrefix(`/nextcloud`))
+      - traefik.http.services.nextcloud.loadbalancer.server.port=443
+      - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
+      - traefik.http.routers.nextcloud.service=nextcloud
+      - traefik.http.routers.nextcloud.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      # - 'traefik.http.middlewares.nextcloud.replacepathregex.regex=^/.well-known/ca(l|rd)dav'
+      # - 'traefik.http.middlewares.nextcloud.replacepathregex.replacement=/remote.php/dav/'
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    image: lscr.io/linuxserver/nextcloud:latest
 
 networks:
   apps:
