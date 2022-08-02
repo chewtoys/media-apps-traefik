@@ -996,9 +996,9 @@ services:
       - audioBitrate=lossless
       - requireQuality=true
       - audioLyricType=both
-      - dlClientSource=deezer
+      - dlClientSource=both
       - enableBeetsTagging=true
-      - enableReplaygainTags=true
+      - enableReplaygainTags=false
       - arlToken=${ARL_DEEZER_TOKEN}
       - tidalCountryCode=US
       - addDeezerTopArtists=false
