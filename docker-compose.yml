@@ -243,6 +243,43 @@ services:
       - traefik
     image: authelia/authelia:latest
 
+  # mariadb - used for authelia storage
+  organizr-db:
+    container_name: organizr-db
+    hostname: organizr-db
+    restart: unless-stopped
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=0022
+      - UMASK=022
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/mysql_root_secret
+      - FILE__MYSQL_PASSWORD=/run/secrets/mysql_secret
+      - MYSQL_DATABASE=organizr
+      - MYSQL_USER=organizr
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    secrets:
+      - mysql_secret
+      - mysql_root_secret
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_DIR}/organizr-db:/config
+    image: ghcr.io/linuxserver/mariadb:latest
+
   # organizr - WebApp portal for bookmarks, prevents multiple tabs
   # mostly used for sonarr and the like
   # docs: https://hub.docker.com/r/organizr/organizr
@@ -1189,7 +1226,7 @@ services:
       - traefik.http.services.nextcloud.loadbalancer.server.port=443
       - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
       - traefik.http.routers.nextcloud.service=nextcloud
-      - traefik.http.routers.nextcloud.middlewares=rate-limit@docker,secure-headers@docker,authelia@docker
+      - traefik.http.routers.nextcloud.middlewares=rate-limit@docker,secure-headers@docker
       # - 'traefik.http.middlewares.nextcloud.replacepathregex.regex=^/.well-known/ca(l|rd)dav'
       # - 'traefik.http.middlewares.nextcloud.replacepathregex.replacement=/remote.php/dav/'
       # ------------------------------------------------------------------------
