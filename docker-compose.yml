@@ -1034,7 +1034,7 @@ services:
       - audioBitrate=lossless
       - requireQuality=true
       - audioLyricType=both
-      - dlClientSource=both
+      - dlClientSource=deezer
       - enableBeetsTagging=true
       - enableReplaygainTags=false
       - arlToken=${ARL_DEEZER_TOKEN}
