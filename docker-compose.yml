@@ -100,6 +100,7 @@ services:
       - traefik.http.middlewares.secure-headers.headers.addVaryheader=true
       - traefik.http.middlewares.secure-headers.headers.contentSecurityPolicy=script-src 'self'
       - traefik.http.middlewares.secure-headers.headers.referrerPolicy=origin-when-cross-origin
+      - traefik.http.middlewares.secure-headers.headers.customFrameOptionsValue=SAMEORIGIN
       # ------------------------------------------------------------------------
       # AUTHELIA
       # ------------------------------------------------------------------------
@@ -1027,7 +1028,7 @@ services:
       - autoStart=true
       - scriptInterval=15m
       - enableAudioScript=true
-      - enableVideoScript=true
+      - enableVideoScript=false
       - configureLidarrWithOptimalSettings=true
       - audioFormat=native
       - audioBitrate=lossless
@@ -1236,6 +1237,40 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
     image: lscr.io/linuxserver/nextcloud:latest
+
+  cloudflareddns:
+    container_name: cloudflareddns
+    networks:
+      apps: {}
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - TZ=${TZ}
+      - UMASK=022
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - INTERVAL=300
+      - DETECTION_MODE=dig-whoami.cloudflare
+      - LOG_LEVEL=3
+      - cloudflareddns
+      - CF_USER=${CLOUDFLARE_EMAIL}
+      - CF_APIKEY=${CLOUDFLARE_API_KEY}
+      - CF_HOSTS=${DOMAIN_NAME}
+      - CF_ZONES=${DOMAIN_NAME}
+      - CF_RECORDTYPES=A;A
+    labels:
+      # ------------------------------------------------------------------------
+      # PULLIO
+      # ------------------------------------------------------------------------
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.generic.webhook=https://notifiarr.com/api/v1/notification/pullio/${PULLIO_API_KEY}
+    volumes:
+      - ${DOCKER_DIR}/cloudflareddns:/config
+    image: cr.hotio.dev/hotio/cloudflareddns
 
 networks:
   apps:
