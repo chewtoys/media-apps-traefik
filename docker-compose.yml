@@ -215,7 +215,7 @@ services:
       - AUTHELIA_DUO_API_SECRET_KEY_FILE=/run/secrets/duo_api_secret
       - AUTHELIA_SESSION_REDIS_PASSWORD_FILE=/run/secrets/redis_secret
       # - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/postgres_secret
-      # - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_secret
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_secret
     labels:
       - traefik.enable=true
       - traefik.http.routers.authelia.entrypoints=https
@@ -300,7 +300,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - fpm=true
-      - branch=v2-develop
+      - branch=dev
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKER_DIR}/organizr:/config
@@ -1228,8 +1228,6 @@ services:
       - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
       - traefik.http.routers.nextcloud.service=nextcloud
       - traefik.http.routers.nextcloud.middlewares=rate-limit@docker,secure-headers@docker
-      # - 'traefik.http.middlewares.nextcloud.replacepathregex.regex=^/.well-known/ca(l|rd)dav'
-      # - 'traefik.http.middlewares.nextcloud.replacepathregex.replacement=/remote.php/dav/'
       # ------------------------------------------------------------------------
       # PULLIO
       # ------------------------------------------------------------------------
